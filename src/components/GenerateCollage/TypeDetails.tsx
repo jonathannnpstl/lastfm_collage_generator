@@ -1,24 +1,24 @@
 import React, { useState } from "react";
 
 type Props = {
-  settingsData: { showName: boolean };
-  updateSettingsData: (field: "showName", value: boolean) => void;
+  settingsData: { type: "tracks" | "albums" | null };
+  updateSettingsData: (field: "type", value: "tracks" | "albums" | null) => void;
   nextStep: () => void;
 };
 
 
-const OverlayDetailsForm: React.FC<Props> = ({
+const TypeDetailsForm: React.FC<Props> = ({
   updateSettingsData,
   nextStep,
 }) => {
 
-  const handleYes = () => {
-    updateSettingsData("showName", true);
+  const handleAlbum = () => {
+    updateSettingsData("type", "albums");
     nextStep();
   };
 
-  const handleNo = () => {
-    updateSettingsData("showName", false);
+  const handleTrack = () => {
+    updateSettingsData("type", "tracks");
     nextStep();
   };
   return (
@@ -27,25 +27,25 @@ const OverlayDetailsForm: React.FC<Props> = ({
     >
 
         <h2 className="text-lg font-semibold text-gray-800">
-        Do you want to overlay the details on each item?
+        What type of collage would you like to create?
         </h2>
       <button
         type="button"
         className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-        onClick={handleYes}
+        onClick={handleAlbum}
       >
-        Yes
+        Albums
       </button>
 
       <button
         type="button"
         className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-        onClick={handleNo}
+        onClick={handleTrack}
       >
-        No
+        Tracks
       </button>
     </div>
   );
 };
 
-export default OverlayDetailsForm;
+export default TypeDetailsForm;

@@ -1,3 +1,5 @@
+import { CollageSettings } from "./types";
+
 export function transformPeriodFormat(period: string): string {
   switch (period.replace(/\s+/g, "").toLowerCase()) {
     case "1week":
@@ -53,13 +55,7 @@ export function validateCollageSettings (settings: {
   return { valid: true };
 }
 
-export function setCollageSettings (settings: {
-  username: string;
-  duration: string;
-  row_col: number[];
-  showName: boolean;
-  type: "artists" | "albums" | null;
-}): { username: string; duration: string; row: number; col: number; showName: boolean; type: "artists" | "albums" | null } {
+export function setCollageSettings (settings: CollageSettings): { username: string; duration: string; row: number; col: number; showName: boolean; type: "tracks" | "albums" | null } {
   const { username, duration, row_col, showName, type } = settings;
 
   return {

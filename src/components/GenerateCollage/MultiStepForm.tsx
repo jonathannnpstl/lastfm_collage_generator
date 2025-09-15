@@ -4,24 +4,18 @@ import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import UsernameForm from "./UsernameForm";
 import DurationForm from "./DurationForm";
-import { Grid } from "lucide-react";
 import GridSelector from "./GridSelector";
 import OverlayDetailsForm from "./OverlayDetails";
 import CollageGenerator from "./CollageGenerator";
 import ArtistCollageGenerator from "./ArtistCollageGenerator";
+import { CollageSettings } from "@/utils/types";
+import TypeDetailsForm from "./TypeDetails";
 
-type FormData = {
-  username: string;
-  duration: string;
-  row_col: number[];
-  showName: boolean;
-  type: "artists" | "albums" | null;
-};
 
 const MultiStepForm: React.FC = () => {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(0);
-  const [formData, setFormData] = useState<FormData>({
+  const [collageSettings, setCollageSettings] = useState<CollageSettings>({
     username: "",
     duration: "7day",
     row_col: [0, 0],
@@ -29,8 +23,8 @@ const MultiStepForm: React.FC = () => {
     type: null
   });
 
-  const updateFormData = (field: keyof FormData, value: string | number[] | boolean) => {
-    setFormData((prev) => ({
+  const updateCollageSettings = (field: keyof CollageSettings, value: string | number[] | boolean | null) => {
+    setCollageSettings((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -49,38 +43,45 @@ const MultiStepForm: React.FC = () => {
   const steps = [
     <UsernameForm
       key="step1"
-      formData={formData}
-      updateFormData={updateFormData}
+      settingsData={collageSettings}
+      updateSettingsData={updateCollageSettings}
       nextStep={nextStep}
     />,
-    <DurationForm
+
+    <TypeDetailsForm 
       key="step2"
-      formData={formData}
-      updateFormData={updateFormData}
+      settingsData={collageSettings}
+      updateSettingsData={updateCollageSettings}
+      nextStep={nextStep}
+    />,
+
+    <DurationForm
+      key="step3"
+      settingsData={collageSettings}
+      updateSettingsData={updateCollageSettings}
       nextStep={nextStep}
       prevStep={prevStep}
     />,
 
     <GridSelector
       maxSize={10}
-      key="step3"
-      formData={formData}
-      updateFormData={updateFormData}
+      key="step4"
+      settingsData={collageSettings}
+      updateSettingsData={updateCollageSettings}
       nextStep={nextStep}
       prevStep={prevStep}
     />,
 
     <OverlayDetailsForm
-      formData={formData}
-      updateFormData={updateFormData}
+      key="step5"
+      settingsData={collageSettings}
+      updateSettingsData={updateCollageSettings}
       nextStep={nextStep}
     />, 
-    <ArtistCollageGenerator
-      formData={formData}
-    />,
 
     <CollageGenerator
-      formData={formData}
+      key="step6"
+      settingsData={collageSettings}
     />
   ];
 

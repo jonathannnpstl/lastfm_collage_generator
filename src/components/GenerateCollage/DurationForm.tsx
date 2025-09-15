@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import Button from "../Button";
 
 type Props = {
-  formData: { duration: string; };
-  updateFormData: (field: "duration", value: string) => void;
+  settingsData: { duration: string; };
+  updateSettingsData: (field: "duration", value: string) => void;
   nextStep: () => void;
   prevStep: () => void;
 };
@@ -45,8 +45,8 @@ const OptionSelector: React.FC<OptionSelectorProps> = ({ options, selected, onCh
 };
 
 const DurationForm: React.FC<Props> = ({
-  formData,
-  updateFormData,
+  settingsData,
+  updateSettingsData,
   nextStep,
   prevStep,
 }) => {
@@ -71,9 +71,9 @@ const DurationForm: React.FC<Props> = ({
           {name: "12month", label: "12 Months"},
           {name: "overall", label: "Overall"},
         ]}
-        selected={formData.duration}
+        selected={settingsData.duration}
         onChange={(value) => {
-          updateFormData("duration", value);
+          updateSettingsData("duration", value);
         }}
       />
       <Button children="Next" type="submit" />

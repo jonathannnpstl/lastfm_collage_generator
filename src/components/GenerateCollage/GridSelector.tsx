@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import Button from "../Button";
 
 type Props = {
-  formData: { username: string; duration: string; row_col: number[] };
+  settingsData: { username: string; duration: string; row_col: number[] };
   maxSize?: number;
-  updateFormData: (
+  updateSettingsData: (
     field: "username" | "duration" | "row_col",
     value: string | number[]
   ) => void;
@@ -12,15 +12,15 @@ type Props = {
   prevStep: () => void;
 };
 
-const GridSelector: React.FC<Props> = ({ maxSize = 20, formData, updateFormData, nextStep, prevStep, }) => {
+const GridSelector: React.FC<Props> = ({ maxSize = 20, settingsData, updateSettingsData, nextStep, prevStep, }) => {
   const [hover, setHover] = useState<{ row: number; col: number }>({
     row: -1,
     col: -1,
   });
 
   const [selected, setSelected] = useState<{ row: number; col: number }>({
-    row: formData.row_col[0],
-    col: formData.row_col[1],
+    row: settingsData.row_col[0],
+    col: settingsData.row_col[1],
   });
 
   const handleMouseEnter = (row: number, col: number) => {
@@ -30,7 +30,7 @@ const GridSelector: React.FC<Props> = ({ maxSize = 20, formData, updateFormData,
   const handleClick = (row: number, col: number) => {
     const newSelection = { row, col };
     setSelected(newSelection);
-    updateFormData("row_col", [row, col]);
+    updateSettingsData("row_col", [row, col]);
   };
 
   const handleMouseLeave = () => {

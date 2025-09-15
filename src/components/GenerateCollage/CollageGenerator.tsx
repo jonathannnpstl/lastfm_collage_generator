@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { validateCollageSettings } from "../../utils";
 import { setCollageSettings } from "../../utils";
 import Button from "../Button";
+import { CollageSettings } from "@/utils/types";
+import { DEFAULT_IMAGE } from "@/utils/constants";
 
 type Props = {
-  formData: { username: string; duration: string; row_col: number[]; showName: boolean, type: "artists" | "albums" | null  };
+  settingsData: CollageSettings;
 };
 
 type Item = {
@@ -12,18 +14,19 @@ type Item = {
   title: string;
 };
 
-type LastFMArtist = {
-  name: string;
+type Track = {
+  title: string;
+  artist: string;
   mbid: string;
 };
 
-let settings: { 
-    username: string,
-    duration: string,
-    row: number,
-    col: number,
-    showName: boolean,
-    type: "artists" | "albums" | null
+let settings: {
+  username: string;
+  duration: string;
+  row: number;
+  col: number;
+  showName: boolean;
+  type: "tracks" | "albums" | null;
 } = {
     username: "",
     duration: "7day",
@@ -61,40 +64,90 @@ const ErrorLoading: React.FC = () => {
 
 
 const CollageGenerator: React.FC<Props> = ({
-  formData,
+  settingsData,
 }) => {
-  const [lastFMArtist, setLastFMArtsist] = useState<LastFMArtist[]>([]);
   const [fetchingImages, setFetchingImages] = useState<boolean>(true);
   const [items, setItems] = useState<Item[]>([])
 
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const fetchArtists = async () => {
+  const fetchTracks = async () => {
 
     try {
         setFetchingImages(true);
         const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${formData.username}&api_key=${API_KEY}&period=${formData.duration}&limit=${(formData.row_col[0] + 1) * (formData.row_col[1] + 1)}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
         );
         const data = await res.json();
-        const mapped: LastFMArtist[] = data.topartists.artist.map((item: any) => ({
-            name: item.name,
+        const mapped: Track[] = data.toptracks.track.map((item: any) => ({
+            artist: item.artist.name,
+            title: item.name,
             mbid: item.mbid
         }));
 
-        console.log(mapped);
-
-        fetchDiscogsImages(mapped)
+        await fetchTracksImages(mapped);
+        setFetchingImages(false);
+        // setItems(tracks || []);
 
     } catch (error) {
-        console.error("Error fetching artsit", error);
+        console.error("Error fetching artist", error);
     } finally {
       setFetchingImages(false);
     }
   };
 
-  const fetchDiscogsImages = async (artists : LastFMArtist[]) => {
+  const fetchTracksImages = async (tracks: Track[]) => {
+    console.log("Fetching track images..." + tracks.length);
+    
+    const BATCH_SIZE = 40; //for rate limiting
+    const DELAY_MS = 2000;
+    let allResults: { title: string; link: string }[] = [];
+
+    function sleep(ms: number) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    try {
+      for (let i = 0; i < tracks.length; i += BATCH_SIZE) {
+        const batch = tracks.slice(i, i + BATCH_SIZE);
+
+        const responses = await Promise.all(
+          batch.map(async (track) => {
+            const searchRes = await fetch(
+              `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${API_KEY}&artist=${encodeURIComponent(track.artist)}&track=${encodeURIComponent(track.title)}&format=json`
+            );
+            const searchData = await searchRes.json();
+            const match = searchData.track?.album;
+
+            if (!match) return { title: track.title, link: DEFAULT_IMAGE };
+
+            return {
+              title: track.title,
+              link: searchData.track?.album.image[3]["#text"] || searchData.track?.album.image[2]["#text"] || DEFAULT_IMAGE, // large size image
+            };
+          })
+        );
+
+        allResults = allResults.concat(responses);
+
+        // Wait 2 seconds before next batch, unless this is the last batch
+        if (i + BATCH_SIZE < tracks.length) {
+          await sleep(DELAY_MS);
+        }
+      }
+
+      const filtered = allResults.filter((a) => a.link);
+      setItems(filtered);
+      return filtered;
+    } catch (err) {
+      console.error("Error fetching track images:", err);
+    } finally {
+      setFetchingImages(false);
+    }
+  }
+
+  const fetchDiscogsImages = async (artists : { name: string; mbid: string; }[]) => {
     try {
       const responses = await Promise.all(
         artists.map(async (artist) => {
@@ -130,11 +183,11 @@ const CollageGenerator: React.FC<Props> = ({
     try {
       setFetchingImages(true);
       const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${formData.username}&api_key=${API_KEY}&period=${formData.duration}&limit=${(formData.row_col[0] + 1) * (formData.row_col[1] + 1)}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
       );
       const data = await res.json();
       const mapped: Item[] = data.topalbums.album.map((item: any) => ({
-          link: item.image[3]["#text"] || item.image[2]["#text"], // large size image
+          link: item.image[3]["#text"] || item.image[2]["#text"] || DEFAULT_IMAGE, // large size image
           title:`${item.artist.name} – ${item.name}`
 
         }));
@@ -155,7 +208,7 @@ const CollageGenerator: React.FC<Props> = ({
     if (!canvas) return;
 
     const link = document.createElement("a");
-    link.download = `collage_${settings.username}_albums_${settings.row}x${settings.col}_${settings.duration}.png`; // file name
+    link.download = `collage_${settings.username}_${settings.type}_${settings.row}x${settings.col}_${settings.duration}.png`; // file name
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
@@ -227,7 +280,7 @@ const CollageGenerator: React.FC<Props> = ({
     canvas.style.height = `${settings.row * side}px`;
     ctx.scale(dpr, dpr);
 
-    const promises = items.map((album, idx) => {
+    const promises = items.map((item, idx) => {
       return new Promise<void>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -237,12 +290,12 @@ const CollageGenerator: React.FC<Props> = ({
 
           ctx.drawImage(img, col * side, row * side, side, side);
           if (settings.showName) {
-            printName(ctx, col, row, album.title, side, true);
+            printName(ctx, col, row, item.title, side, true);
           }
           resolve();
         };
         img.onerror = () => resolve();
-        img.src = album.link || "/placeholder.jpg";
+        img.src = item.link || DEFAULT_IMAGE;
       });
     });
 
@@ -252,20 +305,20 @@ const CollageGenerator: React.FC<Props> = ({
 
 
   useEffect(() => {
-    const formValidation = validateCollageSettings(formData);
+    const formValidation = validateCollageSettings(settingsData);
 
-    if (formValidation.valid) { 
-      if (formData.type && formData.type === "albums") {
+    if (formValidation.valid) {
+      if (settingsData.type && settingsData.type === "albums") {
         fetchAlbums();
-      } else if (formData.type && formData.type === "artists") {
-        fetchArtists();
+      } else if (settingsData.type && settingsData.type === "tracks") {
+        fetchTracks();
       } else {
         alert("Error fetching...")
       }
     } else {
       alert(formValidation.message || "Invalid settings");
     }
-  }, [formData.username, formData.duration, formData.row_col]);
+  }, [settingsData]);
 
 
    useEffect(() => {
@@ -273,7 +326,7 @@ const CollageGenerator: React.FC<Props> = ({
      const downloadCanvas = downloadCanvasRef.current;
      if (!previousCanvas && !downloadCanvas) return;
 
-    settings = setCollageSettings(formData);
+    settings = setCollageSettings(settingsData);
 
     // if (previousCanvas) {
     //   drawCollage(previousCanvas, albums, settings, 600); // low quality
@@ -283,7 +336,7 @@ const CollageGenerator: React.FC<Props> = ({
     }
 
 
-  }, [items, formData]);
+  }, [items]);
   
   return (
 
@@ -291,7 +344,7 @@ const CollageGenerator: React.FC<Props> = ({
       {fetchingImages ? (
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-          <p className="text-gray-600">Fetching your top albums...</p>
+          <p className="text-gray-600">Fetching your top {settingsData.type}...</p>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center space-y-4">
