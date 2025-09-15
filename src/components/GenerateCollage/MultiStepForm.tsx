@@ -8,12 +8,14 @@ import { Grid } from "lucide-react";
 import GridSelector from "./GridSelector";
 import OverlayDetailsForm from "./OverlayDetails";
 import CollageGenerator from "./CollageGenerator";
+import ArtistCollageGenerator from "./ArtistCollageGenerator";
 
 type FormData = {
   username: string;
   duration: string;
   row_col: number[];
   showName: boolean;
+  type: "artists" | "albums" | null;
 };
 
 const MultiStepForm: React.FC = () => {
@@ -24,6 +26,7 @@ const MultiStepForm: React.FC = () => {
     duration: "7day",
     row_col: [0, 0],
     showName: false,
+    type: null
   });
 
   const updateFormData = (field: keyof FormData, value: string | number[] | boolean) => {
@@ -41,11 +44,6 @@ const MultiStepForm: React.FC = () => {
   const prevStep = () => {
     setDirection(-1);
     setStep((prev) => prev - 1);
-  };
-
-  const handleSubmit = () => {
-    console.log("Final data:", formData);
-    alert(`Submitted: ${JSON.stringify(formData, null, 2)}`);
   };
 
   const steps = [
@@ -77,6 +75,9 @@ const MultiStepForm: React.FC = () => {
       updateFormData={updateFormData}
       nextStep={nextStep}
     />, 
+    <ArtistCollageGenerator
+      formData={formData}
+    />,
 
     <CollageGenerator
       formData={formData}

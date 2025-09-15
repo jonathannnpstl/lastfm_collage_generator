@@ -58,8 +58,9 @@ export function setCollageSettings (settings: {
   duration: string;
   row_col: number[];
   showName: boolean;
-}): { username: string; duration: string; row: number; col: number; showName: boolean } {
-  const { username, duration, row_col, showName } = settings;
+  type: "artists" | "albums" | null;
+}): { username: string; duration: string; row: number; col: number; showName: boolean; type: "artists" | "albums" | null } {
+  const { username, duration, row_col, showName, type } = settings;
 
   return {
     username: username.trim(),
@@ -67,5 +68,6 @@ export function setCollageSettings (settings: {
     row: row_col[0] + 1,
     col: row_col[1] + 1,
     showName,
+    type,
   };
 }   

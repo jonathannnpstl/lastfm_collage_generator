@@ -4,12 +4,17 @@ import { setCollageSettings } from "../../utils";
 import Button from "../Button";
 
 type Props = {
-  formData: { username: string; duration: string; row_col: number[]; showName: boolean };
+  formData: { username: string; duration: string; row_col: number[]; showName: boolean, type: "artists" | "albums" | null  };
 };
 
-type Album = {
+type Item = {
   link: string;
   title: string;
+};
+
+type LastFMArtist = {
+  name: string;
+  mbid: string;
 };
 
 let settings: { 
@@ -17,16 +22,19 @@ let settings: {
     duration: string,
     row: number,
     col: number,
-    showName: boolean
+    showName: boolean,
+    type: "artists" | "albums" | null
 } = {
     username: "",
     duration: "7day",
     row: 0,
     col: 0,
-    showName: false
+    showName: false,
+    type: null
 };
 
 const API_KEY = process.env.NEXT_PUBLIC_LASTFM_KEY;
+const DISCOGS_TOKEN = process.env.NEXT_PUBLIC_DISCOGS_TOKEN;
 
 const ErrorLoading: React.FC = () => {
   const errors = [
@@ -55,21 +63,77 @@ const ErrorLoading: React.FC = () => {
 const CollageGenerator: React.FC<Props> = ({
   formData,
 }) => {
-  const [albums, setAlbums] = useState<Album[]>([]);
+  const [lastFMArtist, setLastFMArtsist] = useState<LastFMArtist[]>([]);
   const [fetchingImages, setFetchingImages] = useState<boolean>(true);
+  const [items, setItems] = useState<Item[]>([])
 
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const fetchArtists = async () => {
+
+    try {
+        setFetchingImages(true);
+        const res = await fetch(
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${formData.username}&api_key=${API_KEY}&period=${formData.duration}&limit=${(formData.row_col[0] + 1) * (formData.row_col[1] + 1)}&format=json`
+        );
+        const data = await res.json();
+        const mapped: LastFMArtist[] = data.topartists.artist.map((item: any) => ({
+            name: item.name,
+            mbid: item.mbid
+        }));
+
+        console.log(mapped);
+
+        fetchDiscogsImages(mapped)
+
+    } catch (error) {
+        console.error("Error fetching artsit", error);
+    } finally {
+      setFetchingImages(false);
+    }
+  };
+
+  const fetchDiscogsImages = async (artists : LastFMArtist[]) => {
+    try {
+      const responses = await Promise.all(
+        artists.map(async (artist) => {
+          const searchRes = await fetch(
+            `https://api.discogs.com/database/search?q=${encodeURIComponent(
+              artist.name
+            )}&type=artist&token=${DISCOGS_TOKEN}`
+          );
+          const searchData = await searchRes.json();
+          const match = searchData.results?.[0];
+
+          if (!match) return { title: artist.name, link: "" };
+
+          return {
+            title: artist.name,
+            link: match.cover_image || match.thumb || "",
+          };
+        })
+      );
+
+      const filtered = responses.filter((a) => a.link);
+      setItems(filtered);
+      console.log(filtered);
+      return filtered;
+    } catch (err) {
+      console.error("Error fetching Discogs images:", err);
+    } finally {
+      setFetchingImages(false)
+    }
+  };
   
   const fetchAlbums = async () => {
-
     try {
       setFetchingImages(true);
       const res = await fetch(
         `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${formData.username}&api_key=${API_KEY}&period=${formData.duration}&limit=${(formData.row_col[0] + 1) * (formData.row_col[1] + 1)}&format=json`
       );
       const data = await res.json();
-      const mapped: Album[] = data.topalbums.album.map((item: any) => ({
+      const mapped: Item[] = data.topalbums.album.map((item: any) => ({
           link: item.image[3]["#text"] || item.image[2]["#text"], // large size image
           title:`${item.artist.name} – ${item.name}`
 
@@ -77,7 +141,7 @@ const CollageGenerator: React.FC<Props> = ({
 
       console.log(mapped);
         
-      setAlbums(mapped);
+      setItems(mapped);
 
     } catch (error) {
       console.error("Error fetching albums:", error);
@@ -147,7 +211,7 @@ const CollageGenerator: React.FC<Props> = ({
 
   const drawCollage = async (
     canvas: HTMLCanvasElement,
-    albums: Album[],
+    items: Item[],
     settings: ReturnType<typeof setCollageSettings>,
     maxCanvasSize: number
   ) => {
@@ -163,7 +227,7 @@ const CollageGenerator: React.FC<Props> = ({
     canvas.style.height = `${settings.row * side}px`;
     ctx.scale(dpr, dpr);
 
-    const promises = albums.map((album, idx) => {
+    const promises = items.map((album, idx) => {
       return new Promise<void>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -190,8 +254,14 @@ const CollageGenerator: React.FC<Props> = ({
   useEffect(() => {
     const formValidation = validateCollageSettings(formData);
 
-    if (formValidation.valid) {      
-      fetchAlbums();
+    if (formValidation.valid) { 
+      if (formData.type && formData.type === "albums") {
+        fetchAlbums();
+      } else if (formData.type && formData.type === "artists") {
+        fetchArtists();
+      } else {
+        alert("Error fetching...")
+      }
     } else {
       alert(formValidation.message || "Invalid settings");
     }
@@ -209,11 +279,11 @@ const CollageGenerator: React.FC<Props> = ({
     //   drawCollage(previousCanvas, albums, settings, 600); // low quality
     // }
     if (downloadCanvas) {
-      drawCollage(downloadCanvas, albums, settings, 300); // high quality
+      drawCollage(downloadCanvas, items, settings, 300); // high quality
     }
 
 
-  }, [albums, formData]);
+  }, [items, formData]);
   
   return (
 
@@ -225,7 +295,7 @@ const CollageGenerator: React.FC<Props> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center space-y-4">
-          {albums.length > 0  || albums.length >= settings.row * settings.col ? (
+          {items.length > 0  || items.length >= settings.row * settings.col ? (
             <>
               <h2 className="text-lg font-semibold text-gray-800 m-4">
                 Your collage is ready!
