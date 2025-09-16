@@ -2,22 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { validateCollageSettings } from "../../utils";
 import { setCollageSettings } from "../../utils";
 import Button from "../Button";
-import { CollageSettings } from "@/utils/types";
-import { DEFAULT_IMAGE } from "@/utils/constants";
+import { CollageSettings, Item, Track } from "@/utils/types";
+import { DEFAULT_IMAGE, DELAY_MS } from "@/utils/constants";
+import { sleep } from "@/utils";
+
 
 type Props = {
   settingsData: CollageSettings;
-};
-
-type Item = {
-  link: string;
-  title: string;
-};
-
-type Track = {
-  title: string;
-  artist: string;
-  mbid: string;
 };
 
 let settings: {
@@ -101,12 +92,8 @@ const CollageGenerator: React.FC<Props> = ({
     console.log("Fetching track images..." + tracks.length);
     
     const BATCH_SIZE = 40; //for rate limiting
-    const DELAY_MS = 2000;
+    
     let allResults: { title: string; link: string }[] = [];
-
-    function sleep(ms: number) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
 
     try {
       for (let i = 0; i < tracks.length; i += BATCH_SIZE) {
@@ -170,7 +157,6 @@ const CollageGenerator: React.FC<Props> = ({
 
       const filtered = responses.filter((a) => a.link);
       setItems(filtered);
-      console.log(filtered);
       return filtered;
     } catch (err) {
       console.error("Error fetching Discogs images:", err);
@@ -272,7 +258,7 @@ const CollageGenerator: React.FC<Props> = ({
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const side = maxCanvasSize === 300 ? 300 : Math.floor(maxCanvasSize / Math.max(settings.col, settings.row));
+    const side = maxCanvasSize;
 
     canvas.width = settings.col * side * dpr;
     canvas.height = settings.row * side * dpr;
@@ -300,6 +286,7 @@ const CollageGenerator: React.FC<Props> = ({
     });
 
     await Promise.all(promises);
+    await sleep(DELAY_MS);
 
   };
 
@@ -322,15 +309,15 @@ const CollageGenerator: React.FC<Props> = ({
 
 
    useEffect(() => {
-     const previousCanvas = previewCanvasRef.current;
+     const previewCanvas = previewCanvasRef.current;
      const downloadCanvas = downloadCanvasRef.current;
-     if (!previousCanvas && !downloadCanvas) return;
+     if (!previewCanvas && !downloadCanvas) return;
 
     settings = setCollageSettings(settingsData);
 
-    // if (previousCanvas) {
-    //   drawCollage(previousCanvas, albums, settings, 600); // low quality
-    // }
+    if (previewCanvas) {
+      drawCollage(previewCanvas, items, settings, 50); // low quality
+    }
     if (downloadCanvas) {
       drawCollage(downloadCanvas, items, settings, 300); // high quality
     }
@@ -353,7 +340,7 @@ const CollageGenerator: React.FC<Props> = ({
               <h2 className="text-lg font-semibold text-gray-800 m-4">
                 Your collage is ready!
               </h2>
-              {/* <canvas ref={previewCanvasRef} className="border shadow-md" /> */}
+              <canvas ref={previewCanvasRef} className="border shadow-md" />
               <canvas ref={downloadCanvasRef} className="hidden" />
 
               <Button bgColor="bg-green-600 hover:bg-green-700" onClick={handleDownload} >Download</Button>

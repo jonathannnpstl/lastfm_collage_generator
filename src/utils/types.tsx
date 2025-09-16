@@ -11,3 +11,8 @@ export type Item = {
   title: string;
 };
 
+export type Track = {
+  title: string;
+  artist: string;
+  mbid: string;
+};

@@ -67,3 +67,7 @@ export function setCollageSettings (settings: CollageSettings): { username: stri
     type,
   };
 }   
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
