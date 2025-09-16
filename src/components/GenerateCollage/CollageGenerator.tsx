@@ -59,7 +59,7 @@ const CollageGenerator: React.FC<Props> = ({
 }) => {
   const [fetchingImages, setFetchingImages] = useState<boolean>(true);
   const [items, setItems] = useState<Item[]>([])
-
+  const [showButton, setShowButton] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -322,6 +322,9 @@ const CollageGenerator: React.FC<Props> = ({
       drawCollage(downloadCanvas, items, settings, 300); // high quality
     }
 
+    setShowButton(false); // reset before showing
+    const timer = setTimeout(() => setShowButton(true), 3000);
+    return () => clearTimeout(timer);
 
   }, [items]);
   
@@ -337,13 +340,20 @@ const CollageGenerator: React.FC<Props> = ({
         <div className="flex flex-col items-center justify-center space-y-4">
           {items.length > 0  || items.length >= settings.row * settings.col ? (
             <>
-              <h2 className="text-lg font-semibold text-gray-800 m-4">
-                Your collage is ready!
+              <h2 className="text-lg font-semibold text-gray-800">
+                Your collage is rendering!
               </h2>
+              <p className="text-gray-500 text-sm">
+                Wait until all the images have loaded before downloading.
+              </p>
               <canvas ref={previewCanvasRef} className="border shadow-md" />
               <canvas ref={downloadCanvasRef} className="hidden" />
 
-              <Button bgColor="bg-green-600 hover:bg-green-700" onClick={handleDownload} >Download</Button>
+              {showButton && (
+                <Button bgColor="bg-green-600 hover:bg-green-700" onClick={handleDownload}>
+                  Download
+                </Button>
+              )}
             </>
 
 
