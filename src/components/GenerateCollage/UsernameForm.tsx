@@ -22,7 +22,7 @@ const UsernameForm: React.FC<Props> = ({ settingsData, updateSettingsData, nextS
           <span className="absolute inset-0 bg-yellow-300 rotate-[-2deg] rounded-md"></span>
           <span className="relative text-red-900">collage</span>
         </span>{" "}
-        from your top albums.
+        from your top music.
       </h1>
 
 

@@ -11,6 +11,10 @@ export const fetchTracks = async (settingsData: CollageSettings) => {
         const res = await fetch(
         `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
         );
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
         const mapped: Track[] = data.toptracks.track.map((item: any) => ({
             artist: item.artist.name,
@@ -21,6 +25,7 @@ export const fetchTracks = async (settingsData: CollageSettings) => {
         return await fetchTracksImages(mapped);
     } catch (error) {
         console.error("Error fetching artist", error);
+        return []
     }
   };
 
@@ -40,6 +45,10 @@ export const fetchTracksImages = async (tracks: Track[]) => {
             const searchRes = await fetch(
               `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${API_KEY}&artist=${encodeURIComponent(track.artist)}&track=${encodeURIComponent(track.title)}&format=json`
             );
+
+            if (!searchRes.ok) {
+              throw new Error(`HTTP error! status: ${searchRes.status}`);
+            }
             const searchData = await searchRes.json();
             const match = searchData.track?.album;
 
@@ -64,6 +73,7 @@ export const fetchTracksImages = async (tracks: Track[]) => {
       return filtered;
     } catch (err) {
       console.error("Error fetching track images:", err);
+      return []
     }
 }
 
@@ -73,6 +83,10 @@ export const fetchAlbums = async (settingsData: CollageSettings) => {
       const res = await fetch(
         `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
       );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
       const mapped: Item[] = data.topalbums.album.map((item: any) => ({
           link: item.image[3]["#text"] || item.image[2]["#text"] || DEFAULT_IMAGE, // large size image
@@ -84,6 +98,7 @@ export const fetchAlbums = async (settingsData: CollageSettings) => {
 
     } catch (error) {
       console.error("Error fetching albums:", error);
+      return []
     } 
 }
 

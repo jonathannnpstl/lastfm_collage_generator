@@ -8,7 +8,7 @@ export const drawCollage = async (
     items: Item[],
     settings: ReturnType<typeof setCollageSettings>,
     maxCanvasSize: number,
-    arrangeBy: string
+    arrangeBy: string,
   ) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -21,6 +21,8 @@ export const drawCollage = async (
     canvas.style.width = `${settings.col * side}px`;
     canvas.style.height = `${settings.row * side}px`;
     ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const items_res = await arrangeImages(arrangeBy, items)
     
@@ -44,8 +46,6 @@ export const drawCollage = async (
     });
 
     await Promise.all(promises);
-    await sleep(DELAY_MS);
-
 };
 
 export function printName(
