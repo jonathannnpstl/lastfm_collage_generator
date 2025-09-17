@@ -5,6 +5,8 @@ import Button from "../Button";
 import { CollageSettings, Item, Track } from "@/utils/types";
 import { DEFAULT_IMAGE, DELAY_MS } from "@/utils/constants";
 import { sleep } from "@/utils";
+import DropdownMenu from "../Dropdown";
+import { sortImages } from "@/utils/colorSort";
 
 
 type Props = {
@@ -62,6 +64,7 @@ const CollageGenerator: React.FC<Props> = ({
   const [showButton, setShowButton] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [arrangement, setArrangement] = useState<string>("rank")
 
   const fetchTracks = async () => {
 
@@ -175,7 +178,6 @@ const CollageGenerator: React.FC<Props> = ({
       const mapped: Item[] = data.topalbums.album.map((item: any) => ({
           link: item.image[3]["#text"] || item.image[2]["#text"] || DEFAULT_IMAGE, // large size image
           title:`${item.artist.name} – ${item.name}`
-
         }));
 
       console.log(mapped);
@@ -248,11 +250,28 @@ const CollageGenerator: React.FC<Props> = ({
     ctx.restore();
   }
 
+  const arrangeImages = async (arrangeBy:string, items: Item[])=> {
+    let arranged;
+    switch (arrangeBy) {
+      case "brightness":
+        arranged = await sortImages(items, "brightness")
+        break;
+      case "hue":
+        arranged = await sortImages(items, "hue")
+        break;
+      default:
+        arranged = items
+        break;
+    }
+    return arranged
+  }
+
   const drawCollage = async (
     canvas: HTMLCanvasElement,
     items: Item[],
     settings: ReturnType<typeof setCollageSettings>,
-    maxCanvasSize: number
+    maxCanvasSize: number,
+    arrangeBy: string
   ) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -266,7 +285,9 @@ const CollageGenerator: React.FC<Props> = ({
     canvas.style.height = `${settings.row * side}px`;
     ctx.scale(dpr, dpr);
 
-    const promises = items.map((item, idx) => {
+    const items_res = await arrangeImages(arrangeBy, items)
+    
+    const promises = items_res.map((item, idx) => {
       return new Promise<void>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -313,20 +334,23 @@ const CollageGenerator: React.FC<Props> = ({
      const downloadCanvas = downloadCanvasRef.current;
      if (!previewCanvas && !downloadCanvas) return;
 
+     console.log(arrangement);
+     
+
     settings = setCollageSettings(settingsData);
 
     if (previewCanvas) {
-      drawCollage(previewCanvas, items, settings, 50); // low quality
+      drawCollage(previewCanvas, items, settings, 50, arrangement); // low quality
     }
     if (downloadCanvas) {
-      drawCollage(downloadCanvas, items, settings, 300); // high quality
+      drawCollage(downloadCanvas, items, settings, 300, arrangement); // high quality
     }
 
     setShowButton(false); // reset before showing
-    const timer = setTimeout(() => setShowButton(true), 3000);
+    const timer = setTimeout(() => setShowButton(true), 5000);
     return () => clearTimeout(timer);
 
-  }, [items]);
+  }, [items, arrangement]);
   
   return (
 
@@ -334,7 +358,7 @@ const CollageGenerator: React.FC<Props> = ({
       {fetchingImages ? (
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-          <p className="text-gray-600">Fetching your top {settingsData.type}...</p>
+          <p className="text-gray-600">Fetching your {settingsData.type}...</p>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center space-y-4">
@@ -346,13 +370,28 @@ const CollageGenerator: React.FC<Props> = ({
               <p className="text-gray-500 text-sm">
                 Wait until all the images have loaded before downloading.
               </p>
-              <canvas ref={previewCanvasRef} className="border shadow-md" />
+              <canvas ref={previewCanvasRef} className=" shadow-md" />
               <canvas ref={downloadCanvasRef} className="hidden" />
+                <p className="text-gray-500 text-lg">
+                  Arrange your collage by: 
+                  <span className="font-bold">
+                    {arrangement.toUpperCase()}
+                  </span>
+                </p>
+
 
               {showButton && (
+                <div>                 
+                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                  <Button onClick={() => setArrangement("rank")} className="px-4">Rank</Button>
+                  <Button onClick={() => setArrangement("brightness")} className="px-4">Brightness</Button>
+                  <Button onClick={() => setArrangement("hue")} className="px-4">Hue</Button>
+                </div>
+                {/* <DropdownMenu arrangement={arrangement} setArrangement={setArrangement}/> */}
                 <Button bgColor="bg-green-600 hover:bg-green-700" onClick={handleDownload}>
                   Download
                 </Button>
+                </div>
               )}
             </>
 
