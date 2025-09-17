@@ -3,10 +3,9 @@ import { validateCollageSettings } from "../../utils";
 import { setCollageSettings } from "../../utils";
 import Button from "../Button";
 import { CollageSettings, Item, Track } from "@/utils/types";
-import { DEFAULT_IMAGE, DELAY_MS } from "@/utils/constants";
-import { sleep } from "@/utils";
-import DropdownMenu from "../Dropdown";
-import { sortImages } from "@/utils/colorSort";
+import ErrorLoading from "./ErrorLoading";
+import { fetchTracks, fetchAlbums } from "./fetchers";
+import { drawCollage, } from "./drawUtils";
 
 
 type Props = {
@@ -29,32 +28,6 @@ let settings: {
     type: null
 };
 
-const API_KEY = process.env.NEXT_PUBLIC_LASTFM_KEY;
-const DISCOGS_TOKEN = process.env.NEXT_PUBLIC_DISCOGS_TOKEN;
-
-const ErrorLoading: React.FC = () => {
-  const errors = [
-    "No existing user found.",
-    "Insufficient albums fetched.",
-    "Connection issues.",
-  ];
-
-  return (
-    <div className="flex flex-col items-center justify-center p-6">
-      <h2 className="text-lg font-semibold text-red-600 mb-2">
-        Something went wrong
-      </h2>
-      <p className="text-gray-600 mb-3">Possible reasons are the following:</p>
-      <ul className="text-gray-500 text-sm list-disc list-inside space-y-1">
-        {errors.map((err, idx) => (
-          <li key={idx}>{err}</li>
-        ))}
-      </ul>
-      <Button bgColor="bg-red-600 hover:bg-red-700 mt-6" onClick={() => window.location.reload()} >Try Again</Button>
-    </div>
-  );
-};
-
 
 const CollageGenerator: React.FC<Props> = ({
   settingsData,
@@ -66,130 +39,6 @@ const CollageGenerator: React.FC<Props> = ({
   const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
   const [arrangement, setArrangement] = useState<string>("rank")
 
-  const fetchTracks = async () => {
-
-    try {
-        setFetchingImages(true);
-        const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
-        );
-        const data = await res.json();
-        const mapped: Track[] = data.toptracks.track.map((item: any) => ({
-            artist: item.artist.name,
-            title: item.name,
-            mbid: item.mbid
-        }));
-
-        await fetchTracksImages(mapped);
-        setFetchingImages(false);
-        // setItems(tracks || []);
-
-    } catch (error) {
-        console.error("Error fetching artist", error);
-    } finally {
-      setFetchingImages(false);
-    }
-  };
-
-  const fetchTracksImages = async (tracks: Track[]) => {
-    console.log("Fetching track images..." + tracks.length);
-    
-    const BATCH_SIZE = 40; //for rate limiting
-    
-    let allResults: { title: string; link: string }[] = [];
-
-    try {
-      for (let i = 0; i < tracks.length; i += BATCH_SIZE) {
-        const batch = tracks.slice(i, i + BATCH_SIZE);
-
-        const responses = await Promise.all(
-          batch.map(async (track) => {
-            const searchRes = await fetch(
-              `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${API_KEY}&artist=${encodeURIComponent(track.artist)}&track=${encodeURIComponent(track.title)}&format=json`
-            );
-            const searchData = await searchRes.json();
-            const match = searchData.track?.album;
-
-            if (!match) return { title: track.title, link: DEFAULT_IMAGE };
-
-            return {
-              title: track.title,
-              link: searchData.track?.album.image[3]["#text"] || searchData.track?.album.image[2]["#text"] || DEFAULT_IMAGE, // large size image
-            };
-          })
-        );
-
-        allResults = allResults.concat(responses);
-
-        // Wait 2 seconds before next batch, unless this is the last batch
-        if (i + BATCH_SIZE < tracks.length) {
-          await sleep(DELAY_MS);
-        }
-      }
-
-      const filtered = allResults.filter((a) => a.link);
-      setItems(filtered);
-      return filtered;
-    } catch (err) {
-      console.error("Error fetching track images:", err);
-    } finally {
-      setFetchingImages(false);
-    }
-  }
-
-  const fetchDiscogsImages = async (artists : { name: string; mbid: string; }[]) => {
-    try {
-      const responses = await Promise.all(
-        artists.map(async (artist) => {
-          const searchRes = await fetch(
-            `https://api.discogs.com/database/search?q=${encodeURIComponent(
-              artist.name
-            )}&type=artist&token=${DISCOGS_TOKEN}`
-          );
-          const searchData = await searchRes.json();
-          const match = searchData.results?.[0];
-
-          if (!match) return { title: artist.name, link: "" };
-
-          return {
-            title: artist.name,
-            link: match.cover_image || match.thumb || "",
-          };
-        })
-      );
-
-      const filtered = responses.filter((a) => a.link);
-      setItems(filtered);
-      return filtered;
-    } catch (err) {
-      console.error("Error fetching Discogs images:", err);
-    } finally {
-      setFetchingImages(false)
-    }
-  };
-  
-  const fetchAlbums = async () => {
-    try {
-      setFetchingImages(true);
-      const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
-      );
-      const data = await res.json();
-      const mapped: Item[] = data.topalbums.album.map((item: any) => ({
-          link: item.image[3]["#text"] || item.image[2]["#text"] || DEFAULT_IMAGE, // large size image
-          title:`${item.artist.name} – ${item.name}`
-        }));
-
-      console.log(mapped);
-        
-      setItems(mapped);
-
-    } catch (error) {
-      console.error("Error fetching albums:", error);
-    } finally {
-      setFetchingImages(false);
-    }
-  }
 
   const handleDownload = () => {
     const canvas = downloadCanvasRef.current;
@@ -201,141 +50,40 @@ const CollageGenerator: React.FC<Props> = ({
     link.click();
   };
 
-
-  function printName(
-    ctx: CanvasRenderingContext2D,
-    i: number, // column index
-    j: number, // row index
-    title: string,
-    sideLength: number,
-    overlay: boolean = false
-  ) {
-    ctx.textAlign = "center";
-
-    // Font size scales with cell size and title length
-    const fontSize = Math.min(
-      (sideLength * 1.3) / title.length,
-      sideLength / 15
-    );
-    ctx.font = `${fontSize}pt sans-serif`;
-
-    const textX = i * sideLength + sideLength / 2;
-    let textY;
-
-    ctx.save();
-
-    if (overlay) {
-      // Draw background rectangle first
-      const bgHeight = sideLength / 8; // ~12% of cell
-      const bgY = j * sideLength + sideLength - bgHeight;
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
-      ctx.fillRect(i * sideLength, bgY, sideLength, bgHeight);
-
-      // Shadow for better readability
-      ctx.shadowBlur = 5;
-      ctx.shadowColor = "#2b2b2b";
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-
-      ctx.fillStyle = "white";
-      ctx.textBaseline = "bottom";
-      textY = j * sideLength + sideLength - sideLength / 30;
-    } else {
-      ctx.fillStyle = "white";
-      ctx.textBaseline = "middle";
-      textY = j * sideLength + sideLength / 2;
-    }
-
-    ctx.fillText(title, textX, textY);
-    ctx.restore();
-  }
-
-  const arrangeImages = async (arrangeBy:string, items: Item[])=> {
-    let arranged;
-    switch (arrangeBy) {
-      case "brightness":
-        arranged = await sortImages(items, "brightness")
-        break;
-      case "hue":
-        arranged = await sortImages(items, "hue")
-        break;
-      default:
-        arranged = items
-        break;
-    }
-    return arranged
-  }
-
-  const drawCollage = async (
-    canvas: HTMLCanvasElement,
-    items: Item[],
-    settings: ReturnType<typeof setCollageSettings>,
-    maxCanvasSize: number,
-    arrangeBy: string
-  ) => {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const side = maxCanvasSize;
-
-    canvas.width = settings.col * side * dpr;
-    canvas.height = settings.row * side * dpr;
-    canvas.style.width = `${settings.col * side}px`;
-    canvas.style.height = `${settings.row * side}px`;
-    ctx.scale(dpr, dpr);
-
-    const items_res = await arrangeImages(arrangeBy, items)
-    
-    const promises = items_res.map((item, idx) => {
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const row = Math.floor(idx / settings.col);
-          const col = idx % settings.col;
-
-          ctx.drawImage(img, col * side, row * side, side, side);
-          if (settings.showName) {
-            printName(ctx, col, row, item.title, side, true);
+  const processItems = async () => {
+    if (settingsData.type && settingsData.type === "albums") {
+        fetchAlbums(settingsData).then(data => {
+          if (data) {
+            setItems(data)
           }
-          resolve();
-        };
-        img.onerror = () => resolve();
-        img.src = item.link || DEFAULT_IMAGE;
-      });
-    });
-
-    await Promise.all(promises);
-    await sleep(DELAY_MS);
-
-  };
-
-
-  useEffect(() => {
-    const formValidation = validateCollageSettings(settingsData);
-
-    if (formValidation.valid) {
-      if (settingsData.type && settingsData.type === "albums") {
-        fetchAlbums();
+        })  
       } else if (settingsData.type && settingsData.type === "tracks") {
-        fetchTracks();
+        fetchTracks(settingsData).then(data => {
+          if (data) {
+            setItems(data)
+          }
+        })  
       } else {
         alert("Error fetching...")
       }
+  }
+
+  useEffect(() => {
+    const formValidation = validateCollageSettings(settingsData);
+    if (formValidation.valid) {
+      setFetchingImages(true)
+      processItems()
+      setFetchingImages(false)
     } else {
       alert(formValidation.message || "Invalid settings");
     }
-  }, [settingsData]);
+  }, []);
 
 
    useEffect(() => {
      const previewCanvas = previewCanvasRef.current;
      const downloadCanvas = downloadCanvasRef.current;
      if (!previewCanvas && !downloadCanvas) return;
-
-     console.log(arrangement);
-     
 
     settings = setCollageSettings(settingsData);
 
@@ -347,7 +95,7 @@ const CollageGenerator: React.FC<Props> = ({
     }
 
     setShowButton(false); // reset before showing
-    const timer = setTimeout(() => setShowButton(true), 5000);
+    const timer = setTimeout(() => setShowButton(true), 3000);
     return () => clearTimeout(timer);
 
   }, [items, arrangement]);
@@ -375,7 +123,7 @@ const CollageGenerator: React.FC<Props> = ({
                 <p className="text-gray-500 text-lg">
                   Arrange your collage by: 
                   <span className="font-bold">
-                    {arrangement.toUpperCase()}
+                    { " " + arrangement.toUpperCase()}
                   </span>
                 </p>
 
@@ -387,7 +135,6 @@ const CollageGenerator: React.FC<Props> = ({
                   <Button onClick={() => setArrangement("brightness")} className="px-4">Brightness</Button>
                   <Button onClick={() => setArrangement("hue")} className="px-4">Hue</Button>
                 </div>
-                {/* <DropdownMenu arrangement={arrangement} setArrangement={setArrangement}/> */}
                 <Button bgColor="bg-green-600 hover:bg-green-700" onClick={handleDownload}>
                   Download
                 </Button>
