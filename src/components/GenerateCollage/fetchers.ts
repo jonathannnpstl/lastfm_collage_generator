@@ -54,9 +54,16 @@ export const fetchTracksImages = async (tracks: Track[]) => {
 
             if (!match) return { title: track.title, link: DEFAULT_IMAGE };
 
+            if (!(searchData.track?.album.image[3]["#text"] || searchData.track?.album.image[2]["#text"])){
+              const r =  await fetchDiscogTrackImage(track.title, track.artist)
+              console.log(r);
+              
+            }
+
+          
             return {
               title: track.title,
-              link: searchData.track?.album.image[3]["#text"] || searchData.track?.album.image[2]["#text"] || DEFAULT_IMAGE, // large size image
+              link: searchData.track?.album.image[3]["#text"] || searchData.track?.album.image[2]["#text"] || await fetchDiscogTrackImage(track.title, track.artist)  || DEFAULT_IMAGE// large size image
             };
           })
         );
@@ -75,6 +82,30 @@ export const fetchTracksImages = async (tracks: Track[]) => {
       console.error("Error fetching track images:", err);
       return []
     }
+}
+
+export const fetchArtists = async (settingsData: CollageSettings) => {
+    try {
+      const res = await fetch(
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      const mapped: Item[] = data.topalbums.album.map(async (item: any) => ({
+          link: item.image[3]["#text"] || item.image[2]["#text"] || await fetchDiscogTrackImage(item.name, item.artist.name) || DEFAULT_IMAGE, // large size image
+          title:`${item.artist.name}`
+        }));
+
+      console.log(mapped);
+    return mapped
+
+    } catch (error) {
+      console.error("Error fetching albums:", error);
+      return []
+    } 
 }
 
 
@@ -102,6 +133,34 @@ export const fetchAlbums = async (settingsData: CollageSettings) => {
     } 
 }
 
+const fetchDiscogTrackImage = async (title: string, artist: string) => {
+    let result = null;
+    try {
+        const res = await fetch(
+            `https://api.discogs.com/database/search?q=${encodeURIComponent(
+                title
+            )}&artist=${encodeURIComponent(artist)}&token=${DISCOGS_TOKEN}`
+        );
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const searchData = await res.json();
+        console.log(title, artist);
+        console.log(searchData);
+        
+        const match = searchData.results?.[0];
+
+        if (match) {
+            result = match.cover_image || match.thumb || null;
+        }
+    } catch (err) {
+        console.error("Error fetching Discogs images:", err);
+    } finally {
+        return result; // This will return either the image URL or null
+    }
+};
+
+
 
 export const fetchDiscogsImages = async (artists : { name: string; mbid: string; }[]) => {
     try {
@@ -128,6 +187,20 @@ export const fetchDiscogsImages = async (artists : { name: string; mbid: string;
       return filtered;
     } catch (err) {
       console.error("Error fetching Discogs images:", err);
-    } finally {
     }
   };
+
+export const isUsernameExists = async (username: string) => {
+    try {
+      const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${username}&api_key=${API_KEY}&format=json`)
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      } 
+      console.log("User found.");
+      return true
+    } catch (error) {
+      console.log("No user found.", error);
+      return false
+    }
+}

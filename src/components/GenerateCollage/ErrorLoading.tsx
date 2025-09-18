@@ -3,7 +3,7 @@ import Button from "../Button";
 const ErrorLoading: React.FC = () => {
   const errors = [
     "No existing user found.",
-    "Insufficient albums fetched.",
+    "Insufficient data fetched.",
     "Connection issues.",
   ];
 

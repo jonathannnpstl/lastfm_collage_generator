@@ -1,5 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import Button from "../Button";
+import { isUsernameExists } from "./fetchers";
 
 type Props = {
   settingsData: { username: string; };
@@ -8,16 +9,26 @@ type Props = {
 };
 
 const UsernameForm: React.FC<Props> = ({ settingsData, updateSettingsData, nextStep }) => {
+  const [userExists, setUserExists] = useState<boolean>(true)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    nextStep();
+    isUsernameExists(settingsData.username).then((user) => { 
+      if (!user) {
+        setUserExists(false)
+        setTimeout(() => {
+          setUserExists(true)
+        }, 3000);
+      } else {
+        nextStep();
+      }
+    })
   };
 
   return (
     <div>
       <h1 className="text-3xl md:text-4xl font-bold text-center text-red-800 tracking-tight my-6">
-        Create a{" "}
+        Create{" "}
         <span className="relative px-1">
           <span className="absolute inset-0 bg-yellow-300 rotate-[-2deg] rounded-md"></span>
           <span className="relative text-red-900">collage</span>
@@ -42,6 +53,11 @@ const UsernameForm: React.FC<Props> = ({ settingsData, updateSettingsData, nextS
           value={settingsData.username || ""}
           onChange={(e) => updateSettingsData("username", e.target.value)} />
           <label htmlFor="floating_username" className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-red-600 peer-focus:dark:text-red-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Username</label>
+          {!userExists &&
+            <p className="text-sm font-semibold text-red-500 my-2">
+            Username not found.
+          </p>
+          }
         </div>
         <Button children="Next" type="submit" />
       </form>
