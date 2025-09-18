@@ -48,6 +48,48 @@ export const drawCollage = async (
     await Promise.all(promises);
 };
 
+const printName1 = (
+  ctx: CanvasRenderingContext2D, 
+  x: number, 
+  y: number, 
+  size: number, 
+  title: string
+) => {
+  // Dynamically adjust font size based on the length of the title
+  const maxLength = 20; // You can change this based on your needs
+  let fontSize = Math.min(14, Math.max(10, size / (title.length / maxLength)));
+
+  // Set the font size and text styles
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.font = `${fontSize}px Arial`;
+  ctx.textAlign = 'center';
+
+  // Calculate text position (centered at bottom of image)
+  const textX = x + size / 2;
+  const textY = y + size - 10;
+
+  // Add text background for better readability
+  const textMetrics = ctx.measureText(title);
+  
+  // Calculate the background size, increasing slightly for readability
+  const backgroundWidth = textMetrics.width + 10;
+  const backgroundHeight = fontSize + 6;
+
+  // Add a background box to improve readability
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.fillRect(
+    textX - backgroundWidth / 2,
+    textY - backgroundHeight,
+    backgroundWidth,
+    backgroundHeight
+  );
+
+  // Draw the text
+  ctx.fillStyle = 'white';
+  ctx.fillText(title, textX, textY);
+};
+
+
 export function printName(
     ctx: CanvasRenderingContext2D,
     i: number, // column index
