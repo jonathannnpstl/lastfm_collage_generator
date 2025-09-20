@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import Button from "../Button";
 import { StepProps } from "@/utils/types";
 
@@ -44,10 +45,13 @@ const DurationForm: React.FC<StepProps> = ({
   nextStep,
   prevStep,
 }) => {
+  const [duration, setDuration] = useState<string>(settingsData.duration)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    nextStep();
+    updateSettingsData("duration", duration);
+    // nextStep();
   };
+
   return (
      <form
       onSubmit={handleSubmit}
@@ -65,9 +69,9 @@ const DurationForm: React.FC<StepProps> = ({
           {name: "12month", label: "12 Months"},
           {name: "overall", label: "Overall"},
         ]}
-        selected={settingsData.duration}
+        selected={duration}
         onChange={(value) => {
-          updateSettingsData("duration", value);
+          setDuration(value)
         }}
       />
       <Button children="Next" type="submit" />

@@ -62,11 +62,11 @@ const steps: StepConfig[] = [
       
      
       if (layout == "fixed") {
-        return 4;
+        return STEP_SELECTOR;
       } else if (layout == "varying") {
-        return 5
+        return STEP_SIZE
       }
-      return 4 //default to fixed layout
+      return STEP_SELECTOR //default to fixed layout
     },
   },
   {
@@ -131,26 +131,24 @@ const MultiStepForm: React.FC = () => {
   };
 
   const updateAndNext = <K extends keyof CollageSettings>(
-  field: K,
-  value: CollageSettings[K]
-) => {
-  setCollageSettings((prev) => {
-    const nextState = { ...prev, [field]: value };
-    // compute next step from *nextState*, not old state:
-    const nextIndex = steps[currentIndex].next(nextState);
-    if (nextIndex != null && nextIndex !== currentIndex) {
-      setDirection(nextIndex > currentIndex ? 1 : -1);
-      setHistory((h) => [...h, nextIndex]);
-      setCurrentIndex(nextIndex);
-    }
-    return nextState;
+    field: K,
+    value: CollageSettings[K]
+  ) => {
+    setCollageSettings((prev) => {
+      const nextState = { ...prev, [field]: value };
+      console.log(nextState);
+        
+      // compute next step from *nextState*, not old state:
+      const nextIndex = steps[currentIndex].next(nextState);
+      if (nextIndex != null && nextIndex !== currentIndex) {
+        setDirection(nextIndex > currentIndex ? 1 : -1);
+        setHistory((h) => [...h, nextIndex]);
+        setCurrentIndex(nextIndex);
+      }
+      return nextState;
   });
 };
 
-
-  useEffect(() => {
-    console.log("collageSettings changed", collageSettings);
-  }, [collageSettings]);
 
   const nextStep = () => {
     const nextIndex = steps[currentIndex].next(collageSettings);
@@ -164,13 +162,19 @@ const MultiStepForm: React.FC = () => {
   const prevStep = () => {
     setHistory((h) => {
       if (h.length <= 1) return h;
+
+      // compute new history & new index first
       const newHistory = h.slice(0, -1);
       const newIndex = newHistory[newHistory.length - 1];
+
+      // update direction and index based on *old* currentIndex but before returning
       setDirection(newIndex > currentIndex ? 1 : -1);
       setCurrentIndex(newIndex);
+
       return newHistory;
     });
   };
+
 
   const Active = steps[currentIndex].Component;
 

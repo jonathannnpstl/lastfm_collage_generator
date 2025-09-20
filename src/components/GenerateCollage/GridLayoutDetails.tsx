@@ -11,13 +11,12 @@ const GridLayoutDetails: React.FC<StepProps> = ({
   const handleFixed = () => {
     updateSettingsData("gridLayout", "fixed");
     
-    nextStep();
+    // nextStep();
   };
   
   const handleVarying = () => {
     updateSettingsData("gridLayout", "varying");
-    console.log(settingsData.gridLayout);
-    nextStep();
+    // nextStep();
   };
   return (
      <div

@@ -1,24 +1,26 @@
 import React, { useState } from "react";
 import { StepProps } from "@/utils/types";
+import Button from "@/components/Button";
 
 const GridSize: React.FC<StepProps> = ({
   updateSettingsData,
   nextStep,
+  prevStep
 }) => {
 
   const handle4 = () => {
     updateSettingsData("gridSize", 4);
-    nextStep();
+    // nextStep();
   };
 
   const handle5 = () => {
     updateSettingsData("gridSize", 5);
-    nextStep();
+    // nextStep();
   };
 
   const handle6 = () => {
     updateSettingsData("gridSize", 6);
-    nextStep();
+    // nextStep();
   };
 
   return (
@@ -51,6 +53,7 @@ const GridSize: React.FC<StepProps> = ({
       >
         6x6
       </button>
+      <Button children="Back" type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600" />
     </div>
   );
 };
