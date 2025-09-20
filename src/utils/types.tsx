@@ -4,6 +4,8 @@ export type CollageSettings = {
   row_col: number[];
   showName: boolean;
   type: "tracks" | "albums" | null;
+  gridLayout: "fixed" | "varying"
+  gridSize: number
 };
 
 export type Item = {
@@ -15,4 +17,16 @@ export type Track = {
   title: string;
   artist: string;
   mbid: string;
+};
+
+export type StepProps = {
+  settingsData: CollageSettings;
+  maxSize?: number;
+  updateSettingsData: (
+    field: keyof CollageSettings,
+    value: number | string | number[] | boolean | null 
+  ) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+
 };

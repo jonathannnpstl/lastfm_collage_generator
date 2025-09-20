@@ -1,18 +1,8 @@
 import React, { useState } from "react";
-import Button from "../Button";
+import Button from "../../Button";
+import { StepProps } from "@/utils/types";
 
-type Props = {
-  settingsData: { username: string; duration: string; row_col: number[] };
-  maxSize?: number;
-  updateSettingsData: (
-    field: "username" | "duration" | "row_col",
-    value: string | number[]
-  ) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-};
-
-const GridSelector: React.FC<Props> = ({ maxSize = 20, settingsData, updateSettingsData, nextStep, prevStep, }) => {
+const GridSelector: React.FC<StepProps> = ({ maxSize = 15, settingsData, updateSettingsData, nextStep, prevStep, }) => {
   const [hover, setHover] = useState<{ row: number; col: number }>({
     row: -1,
     col: -1,

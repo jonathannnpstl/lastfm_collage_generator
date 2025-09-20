@@ -1,7 +1,7 @@
 import { Item } from "@/utils/types";
 import { setCollageSettings, sleep } from "@/utils";
-import { sortImages } from "@/utils/colorSort";
-import { DEFAULT_IMAGE, DELAY_MS } from "@/utils/constants";
+import { sortImages } from "./colorSort";
+import { DEFAULT_IMAGE } from "@/utils/constants";
 
 export const drawCollage = async (
     canvas: HTMLCanvasElement,

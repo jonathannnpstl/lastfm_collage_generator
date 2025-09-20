@@ -1,14 +1,11 @@
 import React, {useState} from "react";
 import Button from "../Button";
 import { isUsernameExists } from "./fetchers";
+import { StepProps } from "@/utils/types";
 
-type Props = {
-  settingsData: { username: string; };
-  updateSettingsData: (field: "username" , value: string ) => void;
-  nextStep: () => void;
-};
 
-const UsernameForm: React.FC<Props> = ({ settingsData, updateSettingsData, nextStep }) => {
+
+const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, nextStep }) => {
   const [userExists, setUserExists] = useState<boolean>(true)
 
   const handleSubmit = (e: React.FormEvent) => {

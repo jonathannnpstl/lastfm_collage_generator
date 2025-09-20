@@ -1,13 +1,9 @@
 import React, { useState } from "react";
-
-type Props = {
-  settingsData: { showName: boolean };
-  updateSettingsData: (field: "showName", value: boolean) => void;
-  nextStep: () => void;
-};
+import { StepProps } from "@/utils/types";
 
 
-const OverlayDetailsForm: React.FC<Props> = ({
+
+const OverlayDetailsForm: React.FC<StepProps> = ({
   updateSettingsData,
   nextStep,
 }) => {

@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { validateCollageSettings } from "../../utils";
-import { setCollageSettings } from "../../utils";
-import Button from "../Button";
+import { validateCollageSettings } from "../../../utils";
+import { setCollageSettings } from "../../../utils";
+import Button from "../../Button";
 import { CollageSettings, Item, Track } from "@/utils/types";
-import ErrorLoading from "./ErrorLoading";
-import { fetchTracks, fetchAlbums } from "./fetchers";
-import { drawCollage } from "./drawUtils";
+import ErrorLoading from "../ErrorLoading";
+import { fetchTracks, fetchAlbums } from "../fetchers";
+import { drawCollage } from "./helpers";
+import { StepProps } from "@/utils/types";
 
-type Props = {
+
+type CollageGeneratorProps = {
   settingsData: CollageSettings;
   items: Item[];
-};
+}
 
 let settings: {
   username: string;
@@ -28,7 +30,7 @@ let settings: {
   type: null,
 };
 
-const CollageGenerator: React.FC<Props> = ({ settingsData, items }) => {
+const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items }) => {
   const [fetchingImages, setFetchingImages] = useState<boolean>(true);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -135,7 +137,7 @@ const CollageGenerator: React.FC<Props> = ({ settingsData, items }) => {
   );
 };
 
-const Collage: React.FC<Props> = ({ settingsData }) => {
+const CollageFixed: React.FC<StepProps> = ({ settingsData }) => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
@@ -185,4 +187,4 @@ const Collage: React.FC<Props> = ({ settingsData }) => {
   return <CollageGenerator items={items} settingsData={settingsData} />;
 };
 
-export default Collage;
+export default CollageFixed;

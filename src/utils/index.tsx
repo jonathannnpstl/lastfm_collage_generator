@@ -1,4 +1,5 @@
 import { CollageSettings } from "./types";
+import { GRID_SELECTOR_SIZE } from "./constants";
 
 export function transformPeriodFormat(period: string): string {
   switch (period.replace(/\s+/g, "").toLowerCase()) {
@@ -47,9 +48,9 @@ export function validateCollageSettings (settings: {
   if (
     !Array.isArray(row_col) ||
     row_col.length !== 2 ||
-    !row_col.every((num) => Number.isInteger(num) && num >= 0 && num <= 9)
+    !row_col.every((num) => Number.isInteger(num) && num >= 0 && num <= GRID_SELECTOR_SIZE-1)
   ) {
-    return { valid: false, message: "Row and column values must be positive integers between 0 and 9." };
+    return { valid: false, message: "Row and column values must be positive integers between 0 and N." };
   }
 
   return { valid: true };

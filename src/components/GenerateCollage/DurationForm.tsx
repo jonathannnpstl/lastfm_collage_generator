@@ -1,12 +1,7 @@
 
 import Button from "../Button";
+import { StepProps } from "@/utils/types";
 
-type Props = {
-  settingsData: { duration: string; };
-  updateSettingsData: (field: "duration", value: string) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-};
 
 type OptionSelectorProps = {
   options: { name: string; label: string }[];
@@ -43,7 +38,7 @@ const OptionSelector: React.FC<OptionSelectorProps> = ({ options, selected, onCh
   );
 };
 
-const DurationForm: React.FC<Props> = ({
+const DurationForm: React.FC<StepProps> = ({
   settingsData,
   updateSettingsData,
   nextStep,

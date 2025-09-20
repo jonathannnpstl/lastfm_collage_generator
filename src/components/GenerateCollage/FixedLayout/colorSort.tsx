@@ -1,5 +1,5 @@
 import { FastAverageColor } from "fast-average-color";
-import { Item } from "./types";
+import { Item } from "../../../utils/types";
 
 type ImgWithColor = {
   src: string;

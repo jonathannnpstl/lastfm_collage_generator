@@ -1,46 +1,58 @@
 import React, { useState } from "react";
 import { StepProps } from "@/utils/types";
 
-
-const TypeDetailsForm: React.FC<StepProps> = ({
+const GridSize: React.FC<StepProps> = ({
   updateSettingsData,
   nextStep,
 }) => {
 
-  const handleAlbum = () => {
-    updateSettingsData("type", "albums");
+  const handle4 = () => {
+    updateSettingsData("gridSize", 4);
     nextStep();
   };
 
-  const handleTrack = () => {
-    updateSettingsData("type", "tracks");
+  const handle5 = () => {
+    updateSettingsData("gridSize", 5);
     nextStep();
   };
+
+  const handle6 = () => {
+    updateSettingsData("gridSize", 6);
+    nextStep();
+  };
+
   return (
      <div
       className="max-w-md mx-auto p-6 space-y-6"
     >
 
         <h2 className="text-lg font-semibold text-gray-800">
-        What type of collage would you like to create?
+            Select grid size.
         </h2>
       <button
         type="button"
         className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-        onClick={handleAlbum}
+        onClick={handle4}
       >
-        Albums
+        4x4
       </button>
 
       <button
         type="button"
         className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-        onClick={handleTrack}
+        onClick={handle5}
       >
-        Tracks
+        5x5
+      </button>
+      <button
+        type="button"
+        className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
+        onClick={handle6}
+      >
+        6x6
       </button>
     </div>
   );
 };
 
-export default TypeDetailsForm;
+export default GridSize;

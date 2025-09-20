@@ -2,18 +2,21 @@ import React, { useState } from "react";
 import { StepProps } from "@/utils/types";
 
 
-const TypeDetailsForm: React.FC<StepProps> = ({
+const GridLayoutDetails: React.FC<StepProps> = ({
+  settingsData,
   updateSettingsData,
   nextStep,
 }) => {
 
-  const handleAlbum = () => {
-    updateSettingsData("type", "albums");
+  const handleFixed = () => {
+    updateSettingsData("gridLayout", "fixed");
+    
     nextStep();
   };
-
-  const handleTrack = () => {
-    updateSettingsData("type", "tracks");
+  
+  const handleVarying = () => {
+    updateSettingsData("gridLayout", "varying");
+    console.log(settingsData.gridLayout);
     nextStep();
   };
   return (
@@ -22,25 +25,25 @@ const TypeDetailsForm: React.FC<StepProps> = ({
     >
 
         <h2 className="text-lg font-semibold text-gray-800">
-        What type of collage would you like to create?
+        Select a grid layout?
         </h2>
       <button
         type="button"
         className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-        onClick={handleAlbum}
+        onClick={handleFixed}
       >
-        Albums
+        Fixed size
       </button>
 
       <button
         type="button"
         className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-        onClick={handleTrack}
+        onClick={handleVarying}
       >
-        Tracks
+        Varying sizes
       </button>
     </div>
   );
 };
 
-export default TypeDetailsForm;
+export default GridLayoutDetails;

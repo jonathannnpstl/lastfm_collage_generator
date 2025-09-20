@@ -1,8 +1,7 @@
-'use client';
-
 import React, { useRef, useEffect, useState } from 'react';
-import { COLLAGE_LAYOUTS } from './GenerateCollage/VaryingLayout/layout';
-import { drawCollage } from './GenerateCollage/VaryingLayout/helpers';
+import { COLLAGE_LAYOUTS } from './layout';
+import { drawCollage } from './helpers';
+import { StepProps } from '@/utils/types';
 
 interface ImageItem {
   id: string;
@@ -77,9 +76,9 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
   );
 };
 
-const DemoCollage: React.FC = () => {
+const CollageFixed: React.FC<StepProps> = ({settingsData}) => {
   const [items, setItems] = useState<ImageItem[]>([]);
-  const [gridSize, setGridSize] = useState<number>(6);
+  const [gridSize, setGridSize] = useState<number>(settingsData.gridSize);
 
   useEffect(() => {
     const imagesCount =
@@ -132,4 +131,4 @@ const DemoCollage: React.FC = () => {
   );
 };
 
-export default DemoCollage;
+export default CollageFixed;
