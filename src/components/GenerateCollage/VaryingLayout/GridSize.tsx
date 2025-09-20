@@ -3,48 +3,46 @@ import { StepProps } from "@/utils/types";
 import Button from "@/components/Button";
 import { COLLAGE_LAYOUTS } from "./layout";
 import { gridSizes } from "./layout";
+import OptionSelector from "@/components/RadioOption";
 
 const GridSize: React.FC<StepProps> = ({
+  settingsData,
   updateSettingsData,
   nextStep,
   prevStep,
 }) => {
 
 
-  const handleSelect = (size: number) => {
-    // update settings for both fields
-    updateSettingsData("gridSize", size);
-    updateSettingsData(
-      "imageCount",
-      COLLAGE_LAYOUTS[size as keyof typeof COLLAGE_LAYOUTS].imageCount
-    );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     nextStep();
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 space-y-6">
-      <h2 className="text-lg font-semibold text-gray-800">
-        Select grid size.
-      </h2>
+      <form
+      onSubmit={handleSubmit}
+      className="max-w-md mx-auto p-6 space-y-6 min-w-sm"
+    >
 
-      {gridSizes.map((size) => (
-        <button
-          key={size}
-          type="button"
-          className="w-full rounded-md bg-red-700 text-white px-6 py-3 font-medium hover:bg-red-800 transition cursor-pointer"
-          onClick={() => handleSelect(size)}
-        >
-          {size}x{size}
-        </button>
-      ))}
+        <h2 className="text-lg font-semibold text-gray-800">
+          Select grid size.
+        </h2>
 
-      <Button
-        children="Back"
-        type="button"
-        onClick={prevStep}
-        bgColor="bg-gray-500 hover:bg-gray-600"
-      />
-    </div>
+        <OptionSelector
+          options={[
+            {name: "4", label: "4x4"},
+            {name: "5", label: "5x5"},
+            {name: "6", label: "6x6"},
+          ]}
+          selected={settingsData.gridSize.toString()}
+          onChange={(value) => {
+            updateSettingsData("gridSize", parseInt(value))
+            updateSettingsData("imageCount", COLLAGE_LAYOUTS[parseInt(value) as keyof typeof COLLAGE_LAYOUTS].imageCount || 4);
+          }}
+          />
+        <Button children="Next" type="submit" />
+        <Button children="Back" type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600" />
+      </form>
   );
 };
 

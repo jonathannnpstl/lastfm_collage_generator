@@ -60,7 +60,7 @@ export const markCellsAsOccupied = (
   }
 };
 
-const printName = (
+export const printName = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -71,8 +71,8 @@ const printName = (
   ctx.textAlign = "center";
 
   const fontSize = Math.min(
-    (size * 4) / Math.max(title.length, 1), // avoid /0
-    size / 15                                // upper bound
+    (size * 2) / Math.max(title.length, 1), // avoid /0
+    size / 20                                // upper bound
   );
   ctx.font = `${fontSize}px sans-serif`;
 
@@ -92,6 +92,10 @@ const printName = (
     rectWidth,
     rectHeight
   );
+  ctx.shadowBlur = 5;
+  ctx.shadowColor = "#2b2b2b";
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
 
   ctx.fillStyle = "white";
   ctx.textBaseline = "bottom";
@@ -102,26 +106,25 @@ const printName = (
 
 
 
-export const drawCollage = async (canvas: HTMLCanvasElement, gridSize: number, settings: CollageSettings, items: Item[]) => {
+export const drawCollage = async (canvas: HTMLCanvasElement, settings: CollageSettings, items: Item[], maxCanvasSize: number = 2000) => {
     // const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const layout = COLLAGE_LAYOUTS[gridSize as keyof typeof COLLAGE_LAYOUTS];
-      canvas.width = 500
-      canvas.height = 500;
-      canvas.style.width = `500px`;
-      canvas.style.height = `500px`;
-
+      const layout = COLLAGE_LAYOUTS[settings.gridSize as keyof typeof COLLAGE_LAYOUTS];
+    
       const cellSize = Math.min(
-        Math.floor(500 / layout.grid.cols),
-        Math.floor(500 / layout.grid.rows)
+        Math.floor(maxCanvasSize / layout.grid.cols),
+        Math.floor(maxCanvasSize / layout.grid.rows)
       );
 
-      canvas.width = layout.grid.cols * cellSize;
-      canvas.height = layout.grid.rows * cellSize;
+      canvas.width =  maxCanvasSize;
+      canvas.height =  maxCanvasSize;
+
+      canvas.style.width = `${Math.floor(canvas.width / 4)}px`;
+      canvas.style.height = `${Math.floor(canvas.height / 4)}px`;
 
       const grid: boolean[][] = Array(layout.grid.rows)
         .fill(null)
@@ -178,54 +181,55 @@ export const drawCollage = async (canvas: HTMLCanvasElement, gridSize: number, s
         currentIndex++;
       }
 
-      // load+draw function
-      const loadAndDrawImage = (
-        assignment: any,
-        item: Item
-      ): Promise<void> => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
+      // collect draw jobs
+    const drawJobs: { img: HTMLImageElement; x: number; y: number; drawSize: number; title: string }[] = [];
 
-          img.onload = () => {
-            const squareSize = assignment.size;
-            const position =
-              assignment.position ||
-              findAvailablePositionForSquare(
-                grid,
-                squareSize,
-                layout.grid.cols,
-                layout.grid.rows
-              );
+    const prepareImage = (assignment: any, item: Item): Promise<void> => {
+      // reserve position immediately
+      const squareSize = assignment.size;
+      const position =
+        assignment.position ||
+        findAvailablePositionForSquare(
+          grid,
+          squareSize,
+          layout.grid.cols,
+          layout.grid.rows
+        );
 
-            if (!position) {
-              console.warn(`No available position for ${squareSize}x${squareSize}`);
-              resolve();
-              return;
-            }
+      if (!position) {
+        console.warn(`No available position for ${squareSize}x${squareSize}`);
+        return Promise.resolve();
+      }
 
-            markCellsAsOccupied(grid, position.col, position.row, squareSize, squareSize);
+      markCellsAsOccupied(grid, position.col, position.row, squareSize, squareSize);
 
-            const x = position.col * cellSize;
-            const y = position.row * cellSize;
-            const drawSize = squareSize * cellSize;
+      const x = position.col * cellSize;
+      const y = position.row * cellSize;
+      const drawSize = squareSize * cellSize;
 
-            ctx.drawImage(img, x, y, drawSize, drawSize);
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          drawJobs.push({ img, x, y, drawSize, title: item.title });
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = item.link || DEFAULT_IMAGE;
+      });
+    };
 
-            if (settings.showName) {
-              printName(ctx, x, y, drawSize, item.title);
-            }
+    // load images and build jobs
+    for (const l of largeItems) await prepareImage(l, items[l.index]);
+    for (const m of mediumItems) await prepareImage(m, items[m.index]);
+    for (const s of smallItems) await prepareImage(s, items[s.index]);
 
-            resolve();
-          };
-
-          img.onerror = () => resolve();
-          img.src = item.link || DEFAULT_IMAGE;
-        });
-      };
-
-      // draw in phases
-      for (const l of largeItems) await loadAndDrawImage(l, items[l.index]);
-      for (const m of mediumItems) await loadAndDrawImage(m, items[m.index]);
-      for (const s of smallItems) await loadAndDrawImage(s, items[s.index]);
+    // SECOND PASS: clear and draw all jobs synchronously
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawJobs.forEach(({ img, x, y, drawSize, title }) => {
+      ctx.drawImage(img, x, y, drawSize, drawSize);
+      if (settings.showName) {
+        printName(ctx, x, y, drawSize, title);
+      }
+    });
 } 

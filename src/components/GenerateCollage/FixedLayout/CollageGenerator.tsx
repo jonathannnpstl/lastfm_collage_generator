@@ -34,12 +34,11 @@ let settings: {
 const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items }) => {
   const [fetchingImages, setFetchingImages] = useState<boolean>(true);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-  const downloadCanvasRef = useRef<HTMLCanvasElement>(null);
   const [arrangement, setArrangement] = useState<string>("rank");
   const [imagesLoaded, setImagesLoaded] = useState<number>(0);
 
   const handleDownload = () => {
-    const canvas = downloadCanvasRef.current;
+    const canvas = previewCanvasRef.current;
     if (!canvas) return;
 
     const link = document.createElement("a");
@@ -54,17 +53,16 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
       setImagesLoaded(0);
       
       const previewCanvas = previewCanvasRef.current;
-      const downloadCanvas = downloadCanvasRef.current;
-      if (!previewCanvas && !downloadCanvas) return;
+      if (!previewCanvas) return;
 
       settings = setCollageSettings(settingsData);
 
       if (previewCanvas) {
-        await drawCollage(previewCanvas, items, settings, 50, arrangement);
+        await drawCollage(previewCanvas, items, settings, 200, arrangement);
       }
-      if (downloadCanvas) {
-        await drawCollage(downloadCanvas, items, settings, 300, arrangement);
-      }
+      // if (downloadCanvas) {
+      //   await drawCollage(downloadCanvas, items, settings, 300, arrangement);
+      // }
       
       setFetchingImages(false);
     };
@@ -108,7 +106,6 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
               )}
               <canvas ref={previewCanvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px' }} className="shadow-md" />
             </div>
-            <canvas ref={downloadCanvasRef} className="hidden" />
             <p className="text-gray-500 text-lg">
               Arrange your collage by: 
               <span className="font-bold">
@@ -141,6 +138,7 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
 const CollageFixed: React.FC<StepProps> = ({ settingsData }) => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const didFetch = useRef(false);
   
   const processItems = async () => {
     setLoading(true);
@@ -166,6 +164,8 @@ const CollageFixed: React.FC<StepProps> = ({ settingsData }) => {
   };
   
   useEffect(() => {
+    if (didFetch.current) return; // deal with the re-render
+    didFetch.current = true;
     const formValidation = validateCollageSettings(settingsData);
     if (formValidation.valid) {
       processItems();

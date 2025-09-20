@@ -7,8 +7,10 @@ import { fetchAlbums, fetchTracks } from '../fetchers';
 import { CollageSettings } from '@/utils/types';
 import ErrorLoading from '../ErrorLoading';
 import LoadingImages from '@/components/LoadingImages';
-
-
+import Button from '@/components/Button';
+import { COLLAGE_LAYOUTS } from './layout';
+import { DEFAULT_IMAGE } from '@/utils/constants';
+import { markCellsAsOccupied, printName, canPlaceAtPosition, findAvailablePositionForSquare } from './helpers';
 
 interface CollageGeneratorProps {
   items: Item[];
@@ -19,30 +21,43 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
   items,
   settingsData,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
 
-  
-  useEffect(() => {
-    const generateCollage = async () => {
-      if (!canvasRef.current || !items.length) return;
+  const handleDownload = () => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    link.download = `collage_${settingsData.username}_${settingsData.type}_${settingsData.gridSize}_${settingsData.duration}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
+  const generateCollage = async () => {
+      if (!previewCanvasRef.current || !items.length) return;
 
       setLoading(true);
-      const canvas = canvasRef.current
-      await drawCollage(canvas, settingsData.gridSize, settingsData, items)
+      const canvas = previewCanvasRef.current;
+      if (canvas) {
+      await drawCollage(canvas, settingsData, items)
+      }
       setLoading(false);
     };
 
+  
+  useEffect(() => {
+    
     generateCollage();
   }, [items]);
 
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
+    <div className="flex flex-col items-center justify-center">
       {items.length > 0 && items.length >= settingsData.imageCount ? (
           <>
             {loading ? 
-            <h2 className="text-lg font-semibold text-gray-800 m-0">
+            <h2 className="text-lg font-semibold text-gray-800">
               Your collage is rendering...
             </h2>
            : 
@@ -50,7 +65,7 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
             <h2 className="text-lg font-semibold text-gray-800">
               Your collage is ready!
             </h2>
-            <p className="text-sm text-gray-600">Larger images are your top {settingsData.type}s</p>
+            <p className="text-sm text-gray-600 mb-4">Larger images are your top {settingsData.type}</p>
             </>
             }
       <div style={{ position: 'relative' }}>
@@ -74,10 +89,22 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
           </div>
   )}
         <canvas
-          ref={canvasRef}
+          ref={previewCanvasRef}
           style={{ border: '1px solid #ccc', borderRadius: '8px' }}
           className="shadow-md"
         />
+
+          <Button onClick={generateCollage} className='mt-4'>
+            Regenerate
+          </Button>
+         <Button 
+            bgColor="bg-green-600 hover:bg-green-700" 
+            onClick={handleDownload}
+            disabled={loading}
+            className='mt-4'
+              >
+              {loading ? "Loading..." : "Download"}
+          </Button>
       </div>
       </>
       ) : (
@@ -90,6 +117,7 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
 const CollageVarying: React.FC<StepProps> = ({settingsData}) => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const didFetch = useRef(false);
 
   const processItems = async () => {
     setLoading(true);
@@ -115,6 +143,8 @@ const CollageVarying: React.FC<StepProps> = ({settingsData}) => {
     };
 
   useEffect(() => {
+     if (didFetch.current) return; // already ran once
+    didFetch.current = true;
 
     const formValidation = validateCollageSettings(settingsData);
         if (formValidation.valid) {
@@ -122,10 +152,6 @@ const CollageVarying: React.FC<StepProps> = ({settingsData}) => {
         } else {
           alert(formValidation.message || "Invalid settings");
         }
-    // const demoItems: Item[] = Array.from({ length: imagesCount }, (_, i) => ({
-    //   link: `https://picsum.photos/300/200?random=${i + 1}`,
-    //   title: `Image ${i + 1}`,
-    // }));
   }, [settingsData]);
 
   if (loading) {

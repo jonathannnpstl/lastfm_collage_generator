@@ -8,9 +8,11 @@ import { StepProps } from "@/utils/types";
 const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, nextStep }) => {
   const [userExists, setUserExists] = useState<boolean>(true)
   const [username, setUsername] = useState<string>("")
+  const [loading, setLoading] = useState<boolean>(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true)
     
     isUsernameExists(username.trim()).then((user) => { 
       if (!user) {
@@ -19,9 +21,10 @@ const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, n
           setUserExists(true)
         }, 3000);
       } else {
-        updateSettingsData("username", username)
+        updateSettingsData("username", username.trim())
         nextStep()
       }
+      setLoading(false)
     })
   };
 
@@ -59,7 +62,7 @@ const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, n
           </p>
           }
         </div>
-        <Button children="Next" type="submit" />
+        <Button children={loading ? "Loading..." : "Next"} type="submit" disabled={loading}/>
       </form>
     </div>
   );
