@@ -7,6 +7,7 @@ import ErrorLoading from "../ErrorLoading";
 import { fetchTracks, fetchAlbums } from "../fetchers";
 import { drawCollage } from "./helpers";
 import { StepProps } from "@/utils/types";
+import LoadingImages from "@/components/LoadingImages";
 
 
 type CollageGeneratorProps = {
@@ -105,7 +106,7 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
                   <div className="text-lg font-medium mb-2">Generating collage...</div>
                 </div>
               )}
-              <canvas ref={previewCanvasRef} className="shadow-md" />
+              <canvas ref={previewCanvasRef} style={{ border: '1px solid #ccc', borderRadius: '8px' }} className="shadow-md" />
             </div>
             <canvas ref={downloadCanvasRef} className="hidden" />
             <p className="text-gray-500 text-lg">
@@ -175,12 +176,7 @@ const CollageFixed: React.FC<StepProps> = ({ settingsData }) => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-8">
-        <div className="text-lg font-medium mb-4">Loading your data...</div>
-        <div className="w-64 h-4 bg-gray-200 rounded-full overflow-hidden">
-          <div className="h-full bg-blue-500 animate-pulse"></div>
-        </div>
-      </div>
+      <LoadingImages/>
     );
   }
   

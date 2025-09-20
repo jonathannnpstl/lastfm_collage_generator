@@ -10,12 +10,12 @@ const OverlayDetailsForm: React.FC<StepProps> = ({
 
   const handleYes = () => {
     updateSettingsData("showName", true);
-    // nextStep();
+    nextStep();
   };
 
   const handleNo = () => {
     updateSettingsData("showName", false);
-    // nextStep();
+    nextStep();
   };
   return (
      <div

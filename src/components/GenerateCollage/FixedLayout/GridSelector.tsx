@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Button from "../../Button";
 import { StepProps } from "@/utils/types";
 
-const GridSelector: React.FC<StepProps> = ({ maxSize = 15, settingsData, updateSettingsData, prevStep, }) => {
+const GridSelector: React.FC<StepProps> = ({ maxSize = 15, settingsData, updateSettingsData, prevStep, nextStep }) => {
   const [hover, setHover] = useState<{ row: number; col: number }>({
     row: -1,
     col: -1,
@@ -19,6 +19,8 @@ const GridSelector: React.FC<StepProps> = ({ maxSize = 15, settingsData, updateS
 
   const handleClick = (row: number, col: number) => {
     const newSelection = { row, col };
+    updateSettingsData("row_col", [row, col]);
+    updateSettingsData("imageCount", (row + 1) * (col + 1));
     setSelected(newSelection);
   };
 
@@ -26,9 +28,6 @@ const GridSelector: React.FC<StepProps> = ({ maxSize = 15, settingsData, updateS
     setHover({ row: -1, col: -1 });
   };
 
-  const nextStep = () => {
-    updateSettingsData("row_col", [selected["row"], selected["col"]]);
-  }
 
   return (
     <>

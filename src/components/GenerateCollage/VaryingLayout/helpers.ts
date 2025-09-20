@@ -1,18 +1,7 @@
 import { COLLAGE_LAYOUTS } from "./layout";
 import { DEFAULT_IMAGE } from "@/utils/constants";
-
-interface CollageSettings {
-  showName: boolean;
-  containerWidth: number;
-  containerHeight: number;
-}
-
-interface ImageItem {
-  id: string;
-  link: string;
-  title: string;
-  rank?: number;
-}
+import { Item } from "@/utils/types";
+import { CollageSettings } from "@/utils/types";
 
 
 export const findAvailablePositionForSquare = (
@@ -72,31 +61,48 @@ export const markCellsAsOccupied = (
 };
 
 const printName = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    size: number,
-    title: string
-  ) => {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    const textX = x + size / 2;
-    const textY = y + size - 10;
-    const textMetrics = ctx.measureText(title);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(
-      textX - textMetrics.width / 2 - 5,
-      textY - 14,
-      textMetrics.width + 10,
-      20
-    );
-    ctx.fillStyle = 'white';
-    ctx.fillText(title, textX, textY);
-  };
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,    // drawSize (cell size)
+  title: string
+) => {
+  ctx.save();
+  ctx.textAlign = "center";
+
+  const fontSize = Math.min(
+    (size * 4) / Math.max(title.length, 1), // avoid /0
+    size / 15                                // upper bound
+  );
+  ctx.font = `${fontSize}px sans-serif`;
+
+  const textX = x + size / 2;
+  const textY = y + size - fontSize / 2;
+
+  // draw background rect behind text
+  const textMetrics = ctx.measureText(title);
+  const padding = 5;
+  const rectWidth = textMetrics.width + padding * 2;
+  const rectHeight = fontSize * 1.4;
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(
+    textX - rectWidth / 2,
+    textY - rectHeight + fontSize / 2,
+    rectWidth,
+    rectHeight
+  );
+
+  ctx.fillStyle = "white";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(title, textX, textY);
+
+  ctx.restore();
+};
 
 
-export const drawCollage = async (canvas: HTMLCanvasElement, gridSize: number, settings: CollageSettings, items: ImageItem[]) => {
+
+export const drawCollage = async (canvas: HTMLCanvasElement, gridSize: number, settings: CollageSettings, items: Item[]) => {
     // const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
@@ -104,10 +110,14 @@ export const drawCollage = async (canvas: HTMLCanvasElement, gridSize: number, s
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const layout = COLLAGE_LAYOUTS[gridSize as keyof typeof COLLAGE_LAYOUTS];
+      canvas.width = 500
+      canvas.height = 500;
+      canvas.style.width = `500px`;
+      canvas.style.height = `500px`;
 
       const cellSize = Math.min(
-        Math.floor(settings.containerWidth / layout.grid.cols),
-        Math.floor(settings.containerHeight / layout.grid.rows)
+        Math.floor(500 / layout.grid.cols),
+        Math.floor(500 / layout.grid.rows)
       );
 
       canvas.width = layout.grid.cols * cellSize;
@@ -171,7 +181,7 @@ export const drawCollage = async (canvas: HTMLCanvasElement, gridSize: number, s
       // load+draw function
       const loadAndDrawImage = (
         assignment: any,
-        item: ImageItem
+        item: Item
       ): Promise<void> => {
         return new Promise((resolve) => {
           const img = new Image();

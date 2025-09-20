@@ -9,7 +9,7 @@ export const fetchTracks = async (settingsData: CollageSettings) => {
 
     try {
         const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${settingsData.imageCount}&format=json`
         );
 
         if (!res.ok) {
@@ -87,7 +87,7 @@ export const fetchTracksImages = async (tracks: Track[]) => {
 export const fetchArtists = async (settingsData: CollageSettings) => {
     try {
       const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${settingsData.imageCount}&format=json`
       );
 
       if (!res.ok) {
@@ -112,7 +112,7 @@ export const fetchArtists = async (settingsData: CollageSettings) => {
 export const fetchAlbums = async (settingsData: CollageSettings) => {
     try {
       const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${(settingsData.row_col[0] + 1) * (settingsData.row_col[1] + 1)}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${settingsData.imageCount}&format=json`
       );
 
       if (!res.ok) {

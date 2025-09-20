@@ -48,8 +48,8 @@ const DurationForm: React.FC<StepProps> = ({
   const [duration, setDuration] = useState<string>(settingsData.duration)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettingsData("duration", duration);
-    // nextStep();
+    // updateSettingsData("duration", duration);
+    nextStep();
   };
 
   return (
@@ -69,9 +69,9 @@ const DurationForm: React.FC<StepProps> = ({
           {name: "12month", label: "12 Months"},
           {name: "overall", label: "Overall"},
         ]}
-        selected={duration}
+        selected={settingsData.duration}
         onChange={(value) => {
-          setDuration(value)
+          updateSettingsData("duration", value)
         }}
       />
       <Button children="Next" type="submit" />

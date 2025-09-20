@@ -1,3 +1,5 @@
+export const gridSizes = [4, 5, 6]
+
 export const COLLAGE_LAYOUTS = {
   4: {
     grid: { cols: 4, rows: 4 },

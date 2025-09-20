@@ -5,7 +5,8 @@ export type CollageSettings = {
   showName: boolean;
   type: "tracks" | "albums" | null;
   gridLayout: "fixed" | "varying"
-  gridSize: number
+  gridSize: number,
+  imageCount: number,
 };
 
 export type Item = {

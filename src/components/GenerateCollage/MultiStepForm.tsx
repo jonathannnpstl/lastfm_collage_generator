@@ -1,35 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useReducer } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
+// --- import your steps components ---
 import UsernameForm from "./UsernameForm";
 import DurationForm from "./DurationForm";
 import GridSelector from "./FixedLayout/GridSelector";
 import OverlayDetailsForm from "./OverlayDetails";
 import TypeDetailsForm from "./TypeDetails";
-import { CollageSettings } from "@/utils/types";
 import GridLayoutDetails from "./GridLayoutDetails";
 import GridSize from "./VaryingLayout/GridSize";
-import { StepProps } from "@/utils/types";
 import CollageVarying from "./VaryingLayout/CollageGenertor";
 import CollageFixed from "./FixedLayout/CollageGenerator";
 
-/**
- * Array-based step configuration (indices are used for navigation).
- * Branching logic returns a number index (or null to indicate "end").
- */
+// --- types ---
+import { CollageSettings, StepProps } from "@/utils/types";
 
-// step index constants (makes branching easier to read)
+// step index constants
 const STEP_USERNAME = 0;
 const STEP_TYPE = 1;
 const STEP_DURATION = 2;
 const STEP_LAYOUT = 3;
-const STEP_SELECTOR = 4
-const STEP_SIZE = 5
+const STEP_SELECTOR = 4;
+const STEP_SIZE = 5;
 const STEP_OVERLAY = 6;
 const STEP_FIXED = 7;
 const STEP_VARYING = 8;
-
 
 type StepConfig = {
   id: string;
@@ -37,6 +34,7 @@ type StepConfig = {
   next: (data: CollageSettings) => number | null;
 };
 
+// steps array (same as before)
 const steps: StepConfig[] = [
   {
     id: "username",
@@ -56,127 +54,123 @@ const steps: StepConfig[] = [
   {
     id: "layout",
     Component: GridLayoutDetails,
-    next: (data: CollageSettings) => {
-      const layout = data.gridLayout
-      console.log(layout);
-      
-     
-      if (layout == "fixed") {
-        return STEP_SELECTOR;
-      } else if (layout == "varying") {
-        return STEP_SIZE
-      }
-      return STEP_SELECTOR //default to fixed layout
+    next: (data) => {
+      const layout = data.gridLayout;
+      console.log("layout", layout);
+      if (layout === "fixed") return STEP_SELECTOR;
+      if (layout === "varying") return STEP_SIZE;
+      return STEP_SELECTOR;
     },
   },
   {
     id: "grid",
     Component: GridSelector,
-    // Branching logic AFTER GridSelector:
-    // small grids (<= 9 cells) -> ask overlay details; otherwise skip to generator
     next: () => STEP_OVERLAY,
   },
   {
     id: "size",
     Component: GridSize,
-    // Branching logic AFTER GridSelector:
-    // small grids (<= 9 cells) -> ask overlay details; otherwise skip to generator
     next: () => STEP_OVERLAY,
   },
   {
     id: "overlay",
     Component: OverlayDetailsForm,
-    next: (data: CollageSettings) => {
-      const layout = data.gridLayout
-      if (layout === "fixed") {
-        return STEP_FIXED;
-      } else if (layout === "varying") {
-        return STEP_VARYING
-      }
-      return STEP_FIXED //default to fixed layout
+    next: (data) => {
+      if (data.gridLayout === "fixed") return STEP_FIXED;
+      if (data.gridLayout === "varying") return STEP_VARYING;
+      return STEP_FIXED;
     },
   },
   {
     id: "fixed",
     Component: CollageFixed,
-    next: () => null, // terminal step
+    next: () => null,
   },
   {
     id: "varying",
     Component: CollageVarying,
-    next: () => null, // terminal step
+    next: () => null,
   },
 ];
 
-const MultiStepForm: React.FC = () => {
-  const [collageSettings, setCollageSettings] = useState<CollageSettings>({
+// --- combined reducer ---
+type WizardState = {
+  settings: CollageSettings;
+  history: number[];
+  currentIndex: number;
+  direction: number;
+};
+
+type WizardAction =
+  | { type: "UPDATE"; field: keyof CollageSettings; value: any }
+  | { type: "NEXT" }
+  | { type: "PREV" };
+
+const initialState: WizardState = {
+  settings: {
     username: "",
     duration: "7day",
     row_col: [0, 0],
     showName: false,
     type: null,
     gridLayout: "varying",
-    gridSize: 4
-  });
-
-  const [currentIndex, setCurrentIndex] = useState<number>(STEP_USERNAME);
-  const [history, setHistory] = useState<number[]>([STEP_USERNAME]);
-  const [direction, setDirection] = useState<number>(0);
-
-  const updateCollageSettings  = <K extends keyof CollageSettings>(
-    field: K,
-    value: CollageSettings[K]
-  ) => {
-    setCollageSettings((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const updateAndNext = <K extends keyof CollageSettings>(
-    field: K,
-    value: CollageSettings[K]
-  ) => {
-    setCollageSettings((prev) => {
-      const nextState = { ...prev, [field]: value };
-      console.log(nextState);
-        
-      // compute next step from *nextState*, not old state:
-      const nextIndex = steps[currentIndex].next(nextState);
-      if (nextIndex != null && nextIndex !== currentIndex) {
-        setDirection(nextIndex > currentIndex ? 1 : -1);
-        setHistory((h) => [...h, nextIndex]);
-        setCurrentIndex(nextIndex);
-      }
-      return nextState;
-  });
+    gridSize: 4,
+    imageCount: 1
+  },
+  history: [STEP_USERNAME],
+  currentIndex: STEP_USERNAME,
+  direction: 0,
 };
 
+function wizardReducer(state: WizardState, action: WizardAction): WizardState {
+  switch (action.type) {
+    case "UPDATE": {
+      const newSettings = { ...state.settings, [action.field]: action.value };
+      return { ...state, settings: newSettings };
+    }
 
-  const nextStep = () => {
-    const nextIndex = steps[currentIndex].next(collageSettings);
-    if (nextIndex === null || nextIndex === undefined) return; // no next
-    if (nextIndex === currentIndex) return; // avoid loop
-    setDirection(nextIndex > currentIndex ? 1 : -1);
-    setHistory((h) => [...h, nextIndex]);
-    setCurrentIndex(nextIndex);
-  };
+    case "NEXT": {
+      const nextIndex = steps[state.currentIndex].next(state.settings);
+      if (nextIndex == null || nextIndex === state.currentIndex) return state;
+      return {
+        ...state,
+        history: [...state.history, nextIndex],
+        currentIndex: nextIndex,
+        direction: nextIndex > state.currentIndex ? 1 : -1,
+      };
+    }
 
-  const prevStep = () => {
-    setHistory((h) => {
-      if (h.length <= 1) return h;
-
-      // compute new history & new index first
-      const newHistory = h.slice(0, -1);
+    case "PREV": {
+      if (state.history.length <= 1) return state;
+      const newHistory = state.history.slice(0, -1);
       const newIndex = newHistory[newHistory.length - 1];
+      return {
+        ...state,
+        history: newHistory,
+        currentIndex: newIndex,
+        direction: newIndex > state.currentIndex ? 1 : -1,
+      };
+    }
 
-      // update direction and index based on *old* currentIndex but before returning
-      setDirection(newIndex > currentIndex ? 1 : -1);
-      setCurrentIndex(newIndex);
+    default:
+      return state;
+  }
+}
 
-      return newHistory;
-    });
-  };
+// --- main component ---
+const MultiStepForm: React.FC = () => {
+  const [state, dispatch] = useReducer(wizardReducer, initialState);
 
+  // helpers
+  const updateSettingsData = <K extends keyof CollageSettings>(
+    field: K,
+    value: CollageSettings[K]
+  ) => dispatch({ type: "UPDATE", field, value });
 
-  const Active = steps[currentIndex].Component;
+  const nextStep = () => dispatch({ type: "NEXT" });
+  const prevStep = () => dispatch({ type: "PREV" });
+
+  const Active = steps[state.currentIndex].Component;
 
   const variants = {
     enter: (dir: number) => ({
@@ -189,10 +183,10 @@ const MultiStepForm: React.FC = () => {
 
   return (
     <div className="max-w-[800px] bg-white flex flex-col justify-center overflow-hidden transition-all duration-300">
-      <AnimatePresence mode="wait" custom={direction}>
+      <AnimatePresence mode="wait" custom={state.direction}>
         <motion.div
-          key={currentIndex} // using index as key keeps Framer Motion consistent
-          custom={direction}
+          key={state.currentIndex}
+          custom={state.direction}
           variants={variants}
           initial="enter"
           animate="center"
@@ -201,8 +195,8 @@ const MultiStepForm: React.FC = () => {
           className="w-full"
         >
           <Active
-            settingsData={collageSettings}
-            updateSettingsData={updateAndNext}
+            settingsData={state.settings}
+            updateSettingsData={updateSettingsData}
             nextStep={nextStep}
             prevStep={prevStep}
           />

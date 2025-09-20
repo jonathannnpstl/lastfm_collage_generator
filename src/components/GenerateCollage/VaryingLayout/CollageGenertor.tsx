@@ -1,31 +1,23 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { COLLAGE_LAYOUTS } from './layout';
 import { drawCollage } from './helpers';
 import { StepProps } from '@/utils/types';
+import { Item } from '@/utils/types';
+import { validateCollageSettings } from '@/utils';
+import { fetchAlbums, fetchTracks } from '../fetchers';
+import { CollageSettings } from '@/utils/types';
+import ErrorLoading from '../ErrorLoading';
+import LoadingImages from '@/components/LoadingImages';
 
-interface ImageItem {
-  id: string;
-  link: string;
-  title: string;
-  rank?: number;
-}
 
-interface CollageSettings {
-  showName: boolean;
-  containerWidth: number;
-  containerHeight: number;
-}
 
 interface CollageGeneratorProps {
-  items: ImageItem[];
-  settings: CollageSettings;
-  gridSize: number;
+  items: Item[];
+  settingsData: CollageSettings;
 }
 
 const CollageGenerator: React.FC<CollageGeneratorProps> = ({
   items,
-  settings,
-  gridSize,
+  settingsData,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
@@ -37,98 +29,113 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
 
       setLoading(true);
       const canvas = canvasRef.current
-      await drawCollage(canvas, gridSize, settings, items)
+      await drawCollage(canvas, settingsData.gridSize, settingsData, items)
       setLoading(false);
     };
 
     generateCollage();
-  }, [items, settings, gridSize]);
+  }, [items]);
 
 
   return (
-    <div style={{ position: 'relative' }}>
-      {loading && (
-        <div
+    <div className="flex flex-col items-center justify-center space-y-4">
+      {items.length > 0 && items.length >= settingsData.imageCount ? (
+          <>
+            {loading ? 
+            <h2 className="text-lg font-semibold text-gray-800 m-0">
+              Your collage is rendering...
+            </h2>
+           : 
+           <>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Your collage is ready!
+            </h2>
+            <p className="text-sm text-gray-600">Larger images are your top {settingsData.type}s</p>
+            </>
+            }
+      <div style={{ position: 'relative' }}>
+        {loading && (
+          <div
           style={{
             position: 'absolute',
             top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            zIndex: 10,
-            flexDirection: 'column',
-          }}
-        >
-          <div className="text-lg font-medium mb-2">Generating collage...</div>
-        </div>
-)}
-      <canvas
-        ref={canvasRef}
-        width={settings.containerWidth}
-        height={settings.containerHeight}
-        style={{ border: '1px solid #ccc', borderRadius: '8px' }}
-      />
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              zIndex: 10,
+              flexDirection: 'column',
+            }}
+            >
+            <div className="text-lg font-medium mb-2">Generating collage...</div>
+          </div>
+  )}
+        <canvas
+          ref={canvasRef}
+          style={{ border: '1px solid #ccc', borderRadius: '8px' }}
+          className="shadow-md"
+        />
+      </div>
+      </>
+      ) : (
+          <ErrorLoading />
+        )}
     </div>
   );
 };
 
-const CollageFixed: React.FC<StepProps> = ({settingsData}) => {
-  const [items, setItems] = useState<ImageItem[]>([]);
-  const [gridSize, setGridSize] = useState<number>(settingsData.gridSize);
+const CollageVarying: React.FC<StepProps> = ({settingsData}) => {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const processItems = async () => {
+    setLoading(true);
+      try {
+        if (settingsData.type && settingsData.type === "albums") {
+          const data = await fetchAlbums(settingsData);
+          if (data) {
+            setItems(data);
+          }
+        } else if (settingsData.type && settingsData.type === "tracks") {
+          const data = await fetchTracks(settingsData);
+          if (data) {
+            setItems(data);
+          }
+        } else {
+          console.log("Error fetching type...");
+        }
+      } catch (error) {
+        console.error("Error processing items:", error);
+      } finally {
+      }
+      setLoading(false);
+    };
 
   useEffect(() => {
-    const imagesCount =
-      COLLAGE_LAYOUTS[gridSize as keyof typeof COLLAGE_LAYOUTS]
-        .imageCount || 10;
-    const demoItems: ImageItem[] = Array.from({ length: imagesCount }, (_, i) => ({
-      id: `item-${i}`,
-      link: `https://picsum.photos/300/200?random=${i + 1}`,
-      title: `Image ${i + 1}`,
-      rank: Math.floor(Math.random() * 100),
-    }));
 
-    setItems(demoItems);
-  }, [gridSize]);
+    const formValidation = validateCollageSettings(settingsData);
+        if (formValidation.valid) {
+          processItems();
+        } else {
+          alert(formValidation.message || "Invalid settings");
+        }
+    // const demoItems: Item[] = Array.from({ length: imagesCount }, (_, i) => ({
+    //   link: `https://picsum.photos/300/200?random=${i + 1}`,
+    //   title: `Image ${i + 1}`,
+    // }));
+  }, [settingsData]);
 
-  const settings: CollageSettings = {
-    showName: true,
-    containerWidth: 500,
-    containerHeight: 500,
-  };
-
+  if (loading) {
+    return (
+      <LoadingImages/>
+    );
+  }
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Collage Generator (Predefined Layout)</h2>
-      <p>Select grid size</p>
-      <div
-        style={{
-          marginBottom: '20px',
-          display: 'flex',
-          gap: '20px',
-          justifyContent: 'center',
-        }}
-      >
-        <div>
-          <label htmlFor="gridSize">Grid Size: </label>
-          <select
-            id="gridSize"
-            value={gridSize}
-            onChange={(e) => setGridSize(parseInt(e.target.value))}
-            style={{ marginLeft: '10px', padding: '5px' }}
-          >
-            <option value={4}>4x4</option>
-            <option value={5}>5x5</option>
-            <option value={6}>6x6</option>
-          </select>
-        </div>
-      </div>
-      <CollageGenerator items={items} settings={settings} gridSize={gridSize} />
-    </div>
+      <CollageGenerator items={items} settingsData={settingsData} />
   );
 };
 
-export default CollageFixed;
+export default CollageVarying;

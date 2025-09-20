@@ -20,6 +20,7 @@ const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, n
         }, 3000);
       } else {
         updateSettingsData("username", username)
+        nextStep()
       }
     })
   };

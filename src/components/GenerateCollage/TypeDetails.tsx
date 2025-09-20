@@ -9,12 +9,12 @@ const TypeDetailsForm: React.FC<StepProps> = ({
 
   const handleAlbum = () => {
     updateSettingsData("type", "albums");
-    // nextStep();
+    nextStep();
   };
 
   const handleTrack = () => {
     updateSettingsData("type", "tracks");
-    // nextStep();
+    nextStep();
   };
   return (
      <div
