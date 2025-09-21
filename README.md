@@ -1,5 +1,5 @@
 # LastFM Collage Generator
-A web app that generates collages of your top music in LastFM.
+A web app that generates collages of your top music on LastFM.
 
 ## Demo
 [Live Demo](https://lastfm-collage-generator-liard.vercel.app)
