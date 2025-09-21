@@ -182,7 +182,7 @@ const MultiStepForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-[800px] bg-white flex flex-col justify-center overflow-hidden transition-all duration-300">
+    <div className="max-w-[800px] bg-white flex flex-col justify-center overflow-hidden transition-all duration-300 p-2">
       <AnimatePresence mode="wait" custom={state.direction}>
         <motion.div
           key={state.currentIndex}

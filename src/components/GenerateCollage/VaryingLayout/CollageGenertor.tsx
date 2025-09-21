@@ -22,13 +22,15 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
   const [loading, setLoading] = useState(true);
 
   const handleDownload = () => {
-    const canvas = previewCanvasRef.current;
-    if (!canvas) return;
-
-    const link = document.createElement("a");
-    link.download = `collage_${settingsData.username}_${settingsData.type}_${settingsData.gridSize}_${settingsData.duration}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+     if (!previewCanvasRef.current) return;
+      previewCanvasRef.current.toBlob((blob) => {
+        if (!blob) return;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `collage_${settingsData.username}_${settingsData.type}_${settingsData.gridSize}_${settingsData.duration}.png`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, 'image/png', 1);
   };
 
   const generateCollage = async () => {

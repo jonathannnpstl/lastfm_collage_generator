@@ -10,7 +10,7 @@ export default function Home() {
        {/* <DemoCollage /> */}
       </main>
       <footer className="row-start-3 flex gap-[12px] flex-wrap items-center justify-center">
-        <p>Contibute on Github.</p>
+        <p>Contribute on Github.</p>
         <a
           href="https://github.com/jonathannnpstl/lastfm_collage_generator"
           target="_blank"

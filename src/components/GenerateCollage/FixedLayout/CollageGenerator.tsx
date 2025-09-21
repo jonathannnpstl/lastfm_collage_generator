@@ -37,13 +37,22 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
   const [arrangement, setArrangement] = useState<string>("rank");
 
   const handleDownload = () => {
-    const canvas = previewCanvasRef.current;
-    if (!canvas) return;
+    // const canvas = previewCanvasRef.current;
+    // if (!canvas) return;
 
-    const link = document.createElement("a");
-    link.download = `collage_${settings.username}_${settings.type}_${settings.row}x${settings.col}_${settings.duration}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    // const link = document.createElement("a");
+    // link.download = `collage_${settings.username}_${settings.type}_${settings.row}x${settings.col}_${settings.duration}.png`;
+    // link.href = canvas.toDataURL("image/png");
+    // link.click();
+    if (!previewCanvasRef.current) return;
+      previewCanvasRef.current.toBlob((blob) => {
+        if (!blob) return;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `collage_${settings.username}_${settings.type}_${settings.row}x${settings.col}_${settings.duration}.png`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, 'image/png', 1);
   };
 
   useEffect(() => {
