@@ -115,7 +115,7 @@ const initialState: WizardState = {
     type: null,
     gridLayout: "varying",
     gridSize: 4,
-    imageCount: 1
+    imageCount: 10
   },
   history: [STEP_USERNAME],
   currentIndex: STEP_USERNAME,

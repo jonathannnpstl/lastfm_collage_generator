@@ -124,7 +124,8 @@ export const fetchAlbums = async (settingsData: CollageSettings) => {
           link: item.image[3]["#text"] || item.image[2]["#text"] || DEFAULT_IMAGE, // large size image
           title:`${item.artist.name} – ${item.name}`
         }));
-
+        console.log(settingsData.imageCount);
+        
       console.log(mapped);
     return mapped
 

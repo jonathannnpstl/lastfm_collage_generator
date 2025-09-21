@@ -65,7 +65,7 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
       settings = setCollageSettings(settingsData);
 
       if (previewCanvas) {
-        await drawCollage(previewCanvas, items, settings, 200, arrangement);
+        await drawCollage(previewCanvas, items, settings, 100, arrangement);
       }
       // if (downloadCanvas) {
       //   await drawCollage(downloadCanvas, items, settings, 300, arrangement);

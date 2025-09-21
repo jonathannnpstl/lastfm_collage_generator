@@ -16,10 +16,10 @@ export const drawCollage = async (
     const dpr = window.devicePixelRatio || 1;
     const side = maxCanvasSize;
 
-    canvas.width = settings.col * side * dpr;
-    canvas.height = settings.row * side * dpr;
-    canvas.style.width = `${(settings.col * side) / 6}px`;
-    canvas.style.height = `${(settings.row * side)  / 6}px`;
+    canvas.width = settings.col * side;
+    canvas.height = settings.row * side;
+    canvas.style.width = `${(settings.col * side) / 3}px`;
+    canvas.style.height = `${(settings.row * side)  / 3}px`;
     ctx.scale(dpr, dpr);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
