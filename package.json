@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^1.2.0",
     "fast-average-color": "^9.5.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.544.0",
