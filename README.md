@@ -1,9 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LastFM Collage Generator
+A web app that generates collages of your top music in LastFM.
+
+## Demo
+[Live Demo](https://lastfm-collage-generator-liard.vercel.app)
+
+##  Screenshots
+
+| Home Page | Generated Collage |
+|-----------|------------------|
+| ![Home Screenshot](./screenshots/home.png) | ![Collage Screenshot](./screenshots/collage.png) |
+
+| Sorted Collage | Varying sizes |
+|-----------|------------------|
+| ![Sorted Collage Screenshot](./screenshots/sortedcollage.png) | ![Varying Sizes Screenshot](./screenshots/varyingcollage.png) |
+
+
+
 
 ## Getting Started
 
-First, run the development server:
+Clone the repository:
 
+```bash
+git clone https://github.com/yourusername/lastfm-collage-generator.git
+cd lastfm-collage-generator
+```
+
+Install dependencies:
+
+```bash
+npm install
+# or
+yarn instal
+```
+Create a `.env.local` file in the project root and add your Last.fm API key:
+```bash
+NEXT_PUBLIC_LASTFM_API_KEY=your_api_key
+```
+
+Run the development server:
 ```bash
 npm run dev
 # or
