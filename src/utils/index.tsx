@@ -26,7 +26,7 @@ export function validateCollageSettings (settings: {
   row_col: number[];
   showName: boolean;
 }): { valid: boolean; message?: string } {
-  const { username, duration, row_col, showName } = settings;
+  const { username, duration, row_col } = settings;
 
   if (!username || username.trim() === "") {
     return { valid: false, message: "Username cannot be empty." };

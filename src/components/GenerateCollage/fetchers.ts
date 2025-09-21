@@ -1,6 +1,7 @@
 import { Item, Track, CollageSettings } from "@/utils/types";
 import { DEFAULT_IMAGE, DELAY_MS } from "@/utils/constants";
 import { sleep } from "@/utils";
+import { LastFmAlbum, LastFmTrack } from "@/utils/types";
 
 const API_KEY = process.env.NEXT_PUBLIC_LASTFM_KEY;
 const DISCOGS_TOKEN = process.env.NEXT_PUBLIC_DISCOGS_TOKEN;
@@ -16,7 +17,7 @@ export const fetchTracks = async (settingsData: CollageSettings) => {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         const data = await res.json();
-        const mapped: Track[] = data.toptracks.track.map((item: any) => ({
+        const mapped: Track[] = data.toptracks.track.map((item: LastFmTrack) => ({
             artist: item.artist.name,
             title: item.name,
             mbid: item.mbid
@@ -84,29 +85,29 @@ export const fetchTracksImages = async (tracks: Track[]) => {
     }
 }
 
-export const fetchArtists = async (settingsData: CollageSettings) => {
-    try {
-      const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${settingsData.imageCount}&format=json`
-      );
+// export const fetchArtists = async (settingsData: CollageSettings) => {
+//     try {
+//       const res = await fetch(
+//         `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${settingsData.username}&api_key=${API_KEY}&period=${settingsData.duration}&limit=${settingsData.imageCount}&format=json`
+//       );
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      const data = await res.json();
-      const mapped: Item[] = data.topalbums.album.map(async (item: any) => ({
-          link: item.image[3]["#text"] || item.image[2]["#text"] || await fetchDiscogTrackImage(item.name, item.artist.name) || DEFAULT_IMAGE, // large size image
-          title:`${item.artist.name}`
-        }));
+//       if (!res.ok) {
+//         throw new Error(`HTTP error! status: ${res.status}`);
+//       }
+//       const data = await res.json();
+//       const mapped: Item[] = data.topalbums.album.map(async (item: any) => ({
+//           link: item.image[3]["#text"] || item.image[2]["#text"] || await fetchDiscogTrackImage(item.name, item.artist.name) || DEFAULT_IMAGE, // large size image
+//           title:`${item.artist.name}`
+//         }));
 
-      console.log(mapped);
-    return mapped
+//       console.log(mapped);
+//     return mapped
 
-    } catch (error) {
-      console.error("Error fetching albums:", error);
-      return []
-    } 
-}
+//     } catch (error) {
+//       console.error("Error fetching albums:", error);
+//       return []
+//     } 
+// }
 
 
 export const fetchAlbums = async (settingsData: CollageSettings) => {
@@ -119,7 +120,7 @@ export const fetchAlbums = async (settingsData: CollageSettings) => {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
-      const mapped: Item[] = data.topalbums.album.map((item: any) => ({
+      const mapped: Item[] = data.topalbums.album.map((item: LastFmAlbum) => ({
           link: item.image[3]["#text"] || item.image[2]["#text"] || DEFAULT_IMAGE, // large size image
           title:`${item.artist.name} – ${item.name}`
         }));

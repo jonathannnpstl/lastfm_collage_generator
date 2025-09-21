@@ -82,9 +82,8 @@ const GridSelector: React.FC<StepProps> = ({ maxSize = 15, settingsData, updateS
         })
     )}
     </div>
-
-    <Button children="Next" type="button" onClick={nextStep} className="my-4" />
-    <Button children="Back" type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600" />
+    <Button type="button" onClick={nextStep} className="my-4">Next</Button>
+    <Button type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600">Back</Button>
     </>
   );
 };

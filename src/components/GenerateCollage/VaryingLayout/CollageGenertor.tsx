@@ -7,10 +7,7 @@ import { fetchAlbums, fetchTracks } from '../fetchers';
 import { CollageSettings } from '@/utils/types';
 import ErrorLoading from '../ErrorLoading';
 import LoadingImages from '@/components/LoadingImages';
-import Button from '@/components/Button';
-import { COLLAGE_LAYOUTS } from './layout';
-import { DEFAULT_IMAGE } from '@/utils/constants';
-import { markCellsAsOccupied, printName, canPlaceAtPosition, findAvailablePositionForSquare } from './helpers';
+import Button from '@/components/Button';;
 
 interface CollageGeneratorProps {
   items: Item[];
@@ -47,9 +44,8 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({
 
   
   useEffect(() => {
-    
     generateCollage();
-  }, [items]);
+  });
 
 
   return (
@@ -152,7 +148,7 @@ const CollageVarying: React.FC<StepProps> = ({settingsData}) => {
         } else {
           alert(formValidation.message || "Invalid settings");
         }
-  }, [settingsData]);
+  });
 
   if (loading) {
     return (

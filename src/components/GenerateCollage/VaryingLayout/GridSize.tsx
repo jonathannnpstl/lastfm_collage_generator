@@ -2,7 +2,6 @@ import React from "react";
 import { StepProps } from "@/utils/types";
 import Button from "@/components/Button";
 import { COLLAGE_LAYOUTS } from "./layout";
-import { gridSizes } from "./layout";
 import OptionSelector from "@/components/RadioOption";
 
 const GridSize: React.FC<StepProps> = ({
@@ -40,8 +39,8 @@ const GridSize: React.FC<StepProps> = ({
             updateSettingsData("imageCount", COLLAGE_LAYOUTS[parseInt(value) as keyof typeof COLLAGE_LAYOUTS].imageCount || 4);
           }}
           />
-        <Button children="Next" type="submit" />
-        <Button children="Back" type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600" />
+        <Button type="submit">Next</Button>
+        <Button type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600">Back</Button>
       </form>
   );
 };

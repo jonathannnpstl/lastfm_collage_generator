@@ -1,5 +1,5 @@
 import { Item } from "@/utils/types";
-import { setCollageSettings, sleep } from "@/utils";
+import { setCollageSettings } from "@/utils";
 import { sortImages } from "./colorSort";
 import { DEFAULT_IMAGE } from "@/utils/constants";
 
@@ -18,8 +18,8 @@ export const drawCollage = async (
 
     canvas.width = settings.col * side * dpr;
     canvas.height = settings.row * side * dpr;
-    canvas.style.width = `500px`;
-    canvas.style.height = `500px`;
+    canvas.style.width = `${(settings.col * side) / 6}px`;
+    canvas.style.height = `${(settings.row * side)  / 6}px`;
     ctx.scale(dpr, dpr);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -5,7 +5,7 @@ import { StepProps } from "@/utils/types";
 
 
 
-const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, nextStep }) => {
+const UsernameForm: React.FC<StepProps> = ({ updateSettingsData, nextStep }) => {
   const [userExists, setUserExists] = useState<boolean>(true)
   const [username, setUsername] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
@@ -62,7 +62,7 @@ const UsernameForm: React.FC<StepProps> = ({ settingsData, updateSettingsData, n
           </p>
           }
         </div>
-        <Button children={loading ? "Loading..." : "Next"} type="submit" disabled={loading}/>
+        <Button type="submit" disabled={loading}>{loading ? "Loading..." : "Next"}</Button>
       </form>
     </div>
   );

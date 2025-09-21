@@ -2,7 +2,7 @@ import { COLLAGE_LAYOUTS } from "./layout";
 import { DEFAULT_IMAGE } from "@/utils/constants";
 import { Item } from "@/utils/types";
 import { CollageSettings } from "@/utils/types";
-
+import { Assignment, GridPosition, SizeDef } from "@/utils/types";
 
 export const findAvailablePositionForSquare = (
   grid: boolean[][],
@@ -133,30 +133,31 @@ export const drawCollage = async (canvas: HTMLCanvasElement, settings: CollageSe
       // choose variant key from first size with variants
       let variantKey: string | undefined;
       const firstWithVariants = layout.sizes.find(
-        (s: any) => s.positions && !Array.isArray(s.positions)
+        (s: SizeDef) => s.positions && !Array.isArray(s.positions)
       );
       if (firstWithVariants && firstWithVariants.positions) {
         const keys = Object.keys(firstWithVariants.positions);
-        variantKey = keys[Math.floor(Math.random() * keys.length)]; //make this incremental instead of incremental
+        variantKey = keys[Math.floor(Math.random() * keys.length)];
       }
 
-      const largeItems: any[] = [];
-      const mediumItems: any[] = [];
-      const smallItems: any[] = [];
+      const largeItems: Assignment[] = [];
+      const mediumItems: Assignment[] = [];
+      const smallItems: Assignment[] = [];
 
       let currentIndex = 0;
       for (const sizeDef of layout.sizes) {
-        let positions: any[] | undefined;
+        let positions: GridPosition[] | undefined;
         if (sizeDef.positions) {
           if (Array.isArray(sizeDef.positions)) {
             positions = sizeDef.positions;
           } else if (variantKey) {
-            positions = (sizeDef.positions as Record<string, any[]>)[variantKey];
+            positions = (sizeDef.positions as Record<string, GridPosition[]>)[variantKey];
+            // positions = sizeDef.positions[variantKey];
           }
         }
 
         for (let i = 0; i < sizeDef.count && currentIndex < items.length; i++) {
-          const assignment: any = {
+          const assignment: Assignment = {
             index: currentIndex,
             size: sizeDef.size,
           };
@@ -184,7 +185,7 @@ export const drawCollage = async (canvas: HTMLCanvasElement, settings: CollageSe
       // collect draw jobs
     const drawJobs: { img: HTMLImageElement; x: number; y: number; drawSize: number; title: string }[] = [];
 
-    const prepareImage = (assignment: any, item: Item): Promise<void> => {
+    const prepareImage = (assignment: Assignment, item: Item): Promise<void> => {
       // reserve position immediately
       const squareSize = assignment.size;
       const position =

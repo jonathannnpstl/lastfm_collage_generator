@@ -1,6 +1,9 @@
+import { CollageLayout } from "@/utils/types";
+
 export const gridSizes = [4, 5, 6]
 
-export const COLLAGE_LAYOUTS = {
+
+export const COLLAGE_LAYOUTS: Record<number, CollageLayout> = {
   4: {
     grid: { cols: 4, rows: 4 },
     sizes: [

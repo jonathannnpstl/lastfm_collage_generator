@@ -1,5 +1,3 @@
-
-import { useState } from "react";
 import Button from "../Button";
 import { StepProps } from "@/utils/types";
 import OptionSelector from "../RadioOption";
@@ -41,8 +39,10 @@ const DurationForm: React.FC<StepProps> = ({
           updateSettingsData("duration", value)
         }}
       />
-      <Button children="Next" type="submit" />
-      <Button children="Back" type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600" />
+      <Button type="submit">
+        Next
+      </Button>
+      <Button type="button" onClick={prevStep} bgColor="bg-gray-500 hover:bg-gray-600">Back</Button>
     </form>
   );
 };

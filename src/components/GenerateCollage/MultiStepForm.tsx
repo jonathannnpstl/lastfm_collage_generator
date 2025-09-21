@@ -102,7 +102,7 @@ type WizardState = {
 };
 
 type WizardAction =
-  | { type: "UPDATE"; field: keyof CollageSettings; value: any }
+  | { type: "UPDATE"; field: keyof CollageSettings; value: string | number | boolean | number[] | null  }
   | { type: "NEXT" }
   | { type: "PREV" };
 

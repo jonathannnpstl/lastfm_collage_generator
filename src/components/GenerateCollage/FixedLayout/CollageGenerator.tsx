@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { validateCollageSettings } from "../../../utils";
 import { setCollageSettings } from "../../../utils";
 import Button from "../../Button";
-import { CollageSettings, Item, Track } from "@/utils/types";
+import { CollageSettings, Item } from "@/utils/types";
 import ErrorLoading from "../ErrorLoading";
 import { fetchTracks, fetchAlbums } from "../fetchers";
 import { drawCollage } from "./helpers";
@@ -35,7 +35,6 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
   const [fetchingImages, setFetchingImages] = useState<boolean>(true);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [arrangement, setArrangement] = useState<string>("rank");
-  const [imagesLoaded, setImagesLoaded] = useState<number>(0);
 
   const handleDownload = () => {
     const canvas = previewCanvasRef.current;
@@ -50,7 +49,6 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
   useEffect(() => {
     const generateCollage = async () => {
       setFetchingImages(true);
-      setImagesLoaded(0);
       
       const previewCanvas = previewCanvasRef.current;
       if (!previewCanvas) return;
@@ -68,7 +66,7 @@ const CollageGenerator: React.FC<CollageGeneratorProps> = ({ settingsData, items
     };
 
     generateCollage();
-  }, [items, arrangement]);
+  }, [settingsData, items, arrangement]);
 
   return (
     <div>
@@ -166,13 +164,15 @@ const CollageFixed: React.FC<StepProps> = ({ settingsData }) => {
   useEffect(() => {
     if (didFetch.current) return; // deal with the re-render
     didFetch.current = true;
+    console.log("rendered FIxed");
+    
     const formValidation = validateCollageSettings(settingsData);
     if (formValidation.valid) {
       processItems();
     } else {
       alert(formValidation.message || "Invalid settings");
     }
-  }, [settingsData]);
+  });
 
   if (loading) {
     return (

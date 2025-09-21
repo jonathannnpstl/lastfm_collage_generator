@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { StepProps } from "@/utils/types";
 
 
 const GridLayoutDetails: React.FC<StepProps> = ({
-  settingsData,
   updateSettingsData,
   nextStep,
 }) => {
